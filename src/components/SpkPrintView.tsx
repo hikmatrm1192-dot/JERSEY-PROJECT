@@ -150,6 +150,12 @@ export const SpkPrintView: React.FC<SpkPrintViewProps> = ({
                 <span className="font-black text-slate-900 text-xs">{sewerText}</span>
               </div>
             </div>
+            {order.workerNotes && order.workerNotes.trim() && (
+              <div className="mt-2 bg-amber-50/80 p-1.5 rounded border border-amber-200 text-[10px]">
+                <span className="text-amber-900 font-bold block uppercase">📝 CATATAN PENUGASAN:</span>
+                <p className="text-slate-800 font-semibold whitespace-pre-line mt-0.5">{order.workerNotes}</p>
+              </div>
+            )}
           </div>
 
           <div className="border-l border-slate-300 pl-3 space-y-1">

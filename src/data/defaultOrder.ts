@@ -35,10 +35,13 @@ export const PRINTING_OPTIONS = [
 ];
 
 export const DEFAULT_WORKERS: WorkerItem[] = [
-  { id: 1, name: 'APLES', role: 'potong', active: true },
-  { id: 2, name: 'HILMI', role: 'potong', active: false },
-  { id: 3, name: 'AKOK', role: 'jahit', active: true },
-  { id: 4, name: 'OPHY', role: 'jahit', active: false }
+  { id: 1, name: 'APLES', role: 'potong', wagePerPiece: 1000, active: true },
+  { id: 2, name: 'HILMI', role: 'potong', wagePerPiece: 1000, active: false },
+  { id: 3, name: 'AKOK', role: 'jahit', wagePerPiece: 2500, active: true },
+  { id: 4, name: 'OPHY', role: 'jahit', wagePerPiece: 2500, active: false },
+  { id: 5, name: 'UJANG', role: 'potong', wagePerPiece: 1000, active: true },
+  { id: 6, name: 'ASEP', role: 'jahit', wagePerPiece: 2500, active: true },
+  { id: 7, name: 'DENI', role: 'jahit', wagePerPiece: 2500, active: true }
 ];
 
 export const DEFAULT_INITIAL_ORDER: OrderDetails = {
@@ -54,7 +57,15 @@ export const DEFAULT_INITIAL_ORDER: OrderDetails = {
   pantsColor: 'Polos Non-Print + Nomor Polyflex',
   cuttingTeam: 'Tim Potong A',
   sewingTeam: 'Tim Jahit 1',
+  orderValue: 8500000,
   assignedWorkerIds: [1, 3],
+  workerAssignments: [
+    { workerId: 1, workerName: 'APLES', division: 'potong', quantity: 24, wagePerPiece: 1000, totalWage: 24000 },
+    { workerId: 3, workerName: 'AKOK', division: 'jahit', quantity: 24, wagePerPiece: 2500, totalWage: 60000 }
+  ],
+  cuttingStatus: 'Selesai',
+  sewingStatus: 'Sedang Dikerjakan',
+  workerNotes: 'Akok fokus kerah dan lengan, Aples potong pola presisi.',
   specialNotes: '',
   status: 'Proses Jahit',
   workflow: {

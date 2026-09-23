@@ -36,43 +36,73 @@ COACH XXL - COACH`);
       // Remove leading numbering like "1. ", "01) ", "1 - "
       const cleaned = trimmed.replace(/^\s*\d+[\.\)\-\:\s]+\s*/, '');
 
-      let parts = cleaned.split(/[\t,;]+/);
-      if (parts.length < 2) {
-        // Fallback space separated, but handle names that might be multi-word
-        parts = cleaned.split(/\s+/);
-      }
+      // Check if line uses structured delimiter (tab, comma, semicolon)
+      const delimiterParts = cleaned.split(/[\t,;]+/).map((p) => p.trim());
 
       let name = '';
       let size = 'M';
       let number = '';
       let note = 'PEMAIN';
 
-      if (parts.length >= 4) {
-        name = parts[0]?.trim() || '';
-        size = parts[1]?.trim().toUpperCase() || 'M';
-        number = parts[2]?.trim() || '';
-        note = parts.slice(3).join(' ').trim().toUpperCase() || 'PEMAIN';
-      } else if (parts.length === 3) {
-        name = parts[0]?.trim() || '';
-        const p1 = parts[1]?.trim().toUpperCase() || '';
-        const p2 = parts[2]?.trim() || '';
-        if (validSizes.has(p1)) {
-          size = p1;
-          number = p2;
-        } else {
-          number = p1;
-          note = p2.toUpperCase();
-        }
-      } else if (parts.length === 2) {
-        name = parts[0]?.trim() || '';
-        const p1 = parts[1]?.trim().toUpperCase() || '';
-        if (validSizes.has(p1)) {
-          size = p1;
-        } else {
-          number = p1;
+      if (delimiterParts.length >= 2) {
+        // Structured format: TAB, COMMA, or SEMICOLON
+        if (delimiterParts.length >= 4) {
+          name = delimiterParts[0] || '';
+          size = delimiterParts[1]?.toUpperCase() || 'M';
+          number = delimiterParts[2] || '';
+          note = delimiterParts.slice(3).join(' ').trim().toUpperCase() || 'PEMAIN';
+        } else if (delimiterParts.length === 3) {
+          name = delimiterParts[0] || '';
+          const p1 = delimiterParts[1]?.toUpperCase() || '';
+          const p2 = delimiterParts[2] || '';
+          if (validSizes.has(p1)) {
+            size = p1;
+            number = p2;
+          } else {
+            number = p1;
+            note = p2.toUpperCase();
+          }
+        } else if (delimiterParts.length === 2) {
+          name = delimiterParts[0] || '';
+          const p1 = delimiterParts[1]?.toUpperCase() || '';
+          if (validSizes.has(p1)) {
+            size = p1;
+          } else {
+            number = p1;
+          }
         }
       } else {
-        name = parts[0]?.trim() || '';
+        // Space-separated format: NAMA LENGKAP UKURAN NOMOR KETERANGAN
+        // Gunakan posisi UKURAN STANDARD sebagai anchor
+        const tokens = cleaned.split(/\s+/);
+
+        // Cari token pertama yang cocok dengan ukuran standard (mulai dari index 1)
+        let sizeIndex = -1;
+        for (let i = 1; i < tokens.length; i++) {
+          if (validSizes.has(tokens[i].toUpperCase())) {
+            sizeIndex = i;
+            break;
+          }
+        }
+
+        if (sizeIndex !== -1) {
+          // Semua token sebelum ukuran tersebut = name
+          name = tokens.slice(0, sizeIndex).join(' ').trim();
+          size = tokens[sizeIndex].toUpperCase();
+          // Token setelah ukuran: token pertama = number, sisanya = note
+          const afterSize = tokens.slice(sizeIndex + 1);
+          number = afterSize[0] || '';
+          note = afterSize.slice(1).join(' ').trim().toUpperCase() || 'PEMAIN';
+        } else {
+          // Fallback jika tidak ditemukan ukuran standard
+          name = tokens[0] || '';
+          if (tokens.length >= 2) {
+            number = tokens[1] || '';
+          }
+          if (tokens.length >= 3) {
+            note = tokens.slice(2).join(' ').trim().toUpperCase() || 'PEMAIN';
+          }
+        }
       }
 
       // Normalize size

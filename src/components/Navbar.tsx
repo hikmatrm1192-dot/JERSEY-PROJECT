@@ -95,14 +95,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* ➕ Order Baru */}
+          {/* ➕ Tambah Order */}
           <button
             onClick={onNewOrder}
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
-            title="Mulai Order Baru"
+            title="Tambah Order Baru (SPK & Excel)"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span>➕ Order Baru</span>
+            <span>➕ Tambah Order</span>
           </button>
 
           {/* 📋 Impor WA / Excel */}

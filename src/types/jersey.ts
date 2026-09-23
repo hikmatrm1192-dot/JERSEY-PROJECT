@@ -10,7 +10,9 @@ export interface PlayerItem {
   note: string;
 }
 
-export type OrderStatus = 'Draft' | 'Proses Potong' | 'Proses Jahit' | 'QC Passed' | 'Selesai';
+export type OrderStatus = 'Draft' | 'Bahan Diterima' | 'Proses Potong' | 'Proses Jahit' | 'QC Passed' | 'Selesai';
+
+export type DivisionStatus = 'Belum Mulai' | 'Sedang Dikerjakan' | 'Selesai';
 
 export interface WorkflowProgress {
   cutting: {
@@ -25,11 +27,23 @@ export interface WorkflowProgress {
   };
 }
 
+export type WorkerRole = 'potong' | 'jahit' | 'potong_jahit';
+
 export interface WorkerItem {
   id: number | string;
   name: string;
-  role: 'potong' | 'jahit';
+  role: WorkerRole;
+  wagePerPiece?: number;
   active?: boolean;
+}
+
+export interface WorkerAssignment {
+  workerId: number | string;
+  workerName?: string;
+  division: 'potong' | 'jahit';
+  quantity: number;
+  wagePerPiece: number;
+  totalWage: number;
 }
 
 export interface OrderDetails {
@@ -45,7 +59,12 @@ export interface OrderDetails {
   pantsColor: string;
   cuttingTeam?: string;
   sewingTeam?: string;
+  orderValue?: number;
+  workerAssignments?: WorkerAssignment[];
   assignedWorkerIds?: (number | string)[];
+  cuttingStatus?: DivisionStatus;
+  sewingStatus?: DivisionStatus;
+  workerNotes?: string;
   specialNotes: string;
   status: OrderStatus;
   players: PlayerItem[];

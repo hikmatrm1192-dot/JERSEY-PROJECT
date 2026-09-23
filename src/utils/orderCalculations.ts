@@ -1,4 +1,4 @@
-import { OrderDetails, PlayerItem, ProductionRecap } from '../types/jersey';
+import { OrderDetails, PlayerItem, ProductionRecap, WorkerAssignment } from '../types/jersey';
 
 export interface ExtendedProductionRecap extends ProductionRecap {
   specialNotes: string[];
@@ -17,20 +17,32 @@ export function calculateProductionRecap(players: PlayerItem[]): ExtendedProduct
   const duplicateNumbersList: string[] = [];
   const specialNotes: string[] = [];
 
-  players.forEach((p) => {
-    // Clean strings
-    const noteUpper = (p.note || '').trim().toUpperCase();
-    const size = (p.size || 'M').trim().toUpperCase();
-    const pantsSize = (p.pantsSize || size).trim().toUpperCase();
+  // Filter valid player objects
+  const validPlayers = Array.isArray(players)
+    ? players.filter((p): p is PlayerItem => !!p && typeof p === 'object')
+    : [];
 
-    // Atasan count
-    if (size) {
-      sizeJerseyCounts[size] = (sizeJerseyCounts[size] || 0) + 1;
-      totalJersey += 1;
-    }
+  validPlayers.forEach((p) => {
+    // Clean strings and sanitize values
+    const noteUpper = (p.note || '').trim().toUpperCase();
+    const rawSize = (p.size || '').trim().toUpperCase();
+    const size = rawSize || 'M';
+    const rawPantsSize = (p.pantsSize || '').trim().toUpperCase();
+    const pantsSize = rawPantsSize || size;
+
+    // Atasan / Jersey count: setiap player terhitung 1 kali pada ukuran yang sesuai
+    sizeJerseyCounts[size] = (sizeJerseyCounts[size] || 0) + 1;
+    totalJersey += 1;
 
     // Celana count (Tanpa Celana check)
-    const isTanpaCelana = noteUpper.includes('TANPA CELANA') || noteUpper.includes('NO CELANA') || noteUpper.includes('ATASAN SAJA');
+    const isTanpaCelana =
+      noteUpper.includes('TANPA CELANA') ||
+      noteUpper.includes('NO CELANA') ||
+      noteUpper.includes('ATASAN SAJA') ||
+      noteUpper.includes('BAJU SAJA') ||
+      noteUpper.includes('JERSEY SAJA') ||
+      noteUpper.includes('HANYA BAJU');
+
     if (isTanpaCelana) {
       tanpaCelanaCount += 1;
       specialNotes.push(`${p.name || 'Pemain'}: Tanpa Celana`);
@@ -39,20 +51,34 @@ export function calculateProductionRecap(players: PlayerItem[]): ExtendedProduct
       sizeCelanaCounts[pantsSize] = (sizeCelanaCounts[pantsSize] || 0) + 1;
     }
 
-    // Kiper check
-    if (noteUpper.includes('KIEPR') || noteUpper.includes('KIPER') || noteUpper.includes('GK')) {
+    // Kiper check: tag KIEPR, KIPER, GOALKEEPER, atau kata utuh GK (hindari false positive seperti LENGKAP)
+    const isKiper =
+      noteUpper.includes('KIEPR') ||
+      noteUpper.includes('KIPER') ||
+      noteUpper.includes('GOALKEEPER') ||
+      /\bGK\b/.test(noteUpper);
+
+    if (isKiper) {
       kiperCount += 1;
       specialNotes.push(`${p.name || 'Pemain'}: Kiper (Pola Khusus)`);
     }
 
-    // Lengan Panjang check
-    if (p.sleeve === 'panjang' || noteUpper.includes('LENGAN PANJANG') || noteUpper.includes('PANJANG')) {
+    // Lengan Panjang check: field sleeve === 'panjang' atau tag LENGAN PANJANG / TANGAN PANJANG
+    const isLenganPanjang =
+      p.sleeve === 'panjang' ||
+      noteUpper.includes('LENGAN PANJANG') ||
+      noteUpper.includes('TANGAN PANJANG') ||
+      noteUpper.includes('LONG SLEEVE') ||
+      (/\bPANJANG\b/.test(noteUpper) && !noteUpper.includes('CELANA PANJANG'));
+
+    if (isLenganPanjang) {
       lenganPanjangCount += 1;
+      specialNotes.push(`${p.name || 'Pemain'}: Lengan Panjang`);
     }
 
     // Number tracking for duplicates (ignore empty number and dashes)
     const numClean = (p.number || '').trim();
-    if (numClean && numClean !== '-' && numClean !== '0') {
+    if (numClean && numClean !== '-') {
       if (numberTracker[numClean]) {
         duplicateNumbersList.push(numClean);
       } else {
@@ -66,7 +92,7 @@ export function calculateProductionRecap(players: PlayerItem[]): ExtendedProduct
   return {
     totalJersey,
     totalCelana,
-    totalPlayers: players.length,
+    totalPlayers: validPlayers.length,
     sizeJerseyCounts,
     sizeCelanaCounts,
     kiperCount,
@@ -113,3 +139,56 @@ export function exportToCSV(order: OrderDetails): void {
   link.click();
   document.body.removeChild(link);
 }
+
+export function formatRupiah(amount: number): string {
+  if (isNaN(amount) || amount === undefined || amount === null) return 'Rp 0';
+  return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+}
+
+export interface OrderWagesBreakdown {
+  cuttingWage: number;
+  sewingWage: number;
+  totalWage: number;
+  cuttingPcs: number;
+  sewingPcs: number;
+}
+
+export function calculateOrderWages(assignments?: WorkerAssignment[]): OrderWagesBreakdown {
+  if (!assignments || assignments.length === 0) {
+    return {
+      cuttingWage: 0,
+      sewingWage: 0,
+      totalWage: 0,
+      cuttingPcs: 0,
+      sewingPcs: 0,
+    };
+  }
+
+  let cuttingWage = 0;
+  let sewingWage = 0;
+  let cuttingPcs = 0;
+  let sewingPcs = 0;
+
+  for (const a of assignments) {
+    const qty = Math.max(0, Number(a.quantity) || 0);
+    const rate = Math.max(0, Number(a.wagePerPiece) || 0);
+    const subtotal = qty * rate;
+
+    if (a.division === 'potong') {
+      cuttingWage += subtotal;
+      cuttingPcs += qty;
+    } else if (a.division === 'jahit') {
+      sewingWage += subtotal;
+      sewingPcs += qty;
+    }
+  }
+
+  return {
+    cuttingWage,
+    sewingWage,
+    totalWage: cuttingWage + sewingWage,
+    cuttingPcs,
+    sewingPcs,
+  };
+}
+

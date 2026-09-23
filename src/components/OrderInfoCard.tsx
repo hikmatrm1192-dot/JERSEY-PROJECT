@@ -68,6 +68,7 @@ export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, onChange })
             className="w-full bg-white border border-slate-300 rounded p-1.5 font-bold text-indigo-700 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
           >
             <option value="Draft">Draft</option>
+            <option value="Bahan Diterima">Bahan Diterima</option>
             <option value="Proses Potong">Proses Potong</option>
             <option value="Proses Jahit">Proses Jahit</option>
             <option value="QC Passed">QC Passed</option>

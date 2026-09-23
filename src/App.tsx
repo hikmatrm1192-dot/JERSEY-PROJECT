@@ -15,12 +15,13 @@ import { PhotoProofModule } from './components/PhotoProofModule';
 import { AwarenessBanner } from './components/AwarenessBanner';
 import { ProductionSummary } from './components/ProductionSummary';
 import { BulkImportModal } from './components/BulkImportModal';
+import { CreateOrderModal } from './components/CreateOrderModal';
 import { SpkPrintView } from './components/SpkPrintView';
 import { ProStitchLogo } from './components/ProStitchLogo';
 import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, OrderStatus } from './types/jersey';
 import { DEFAULT_INITIAL_ORDER, DEFAULT_WORKERS } from './data/defaultOrder';
 import { calculateProductionRecap } from './utils/orderCalculations';
-import { Check, Save } from 'lucide-react';
+import { Check, Save, PlusCircle } from 'lucide-react';
 
 const STORAGE_KEY_ORDERS_DB = 'prostitch_orders_db';
 const STORAGE_KEY_CURRENT_ORDER = 'jersey_spk_current_order_v5';
@@ -44,12 +45,19 @@ export default function App() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((o: any) => ({
+            ...DEFAULT_INITIAL_ORDER,
             ...o,
             spkNumber: o.spkNumber || o.spkNo || generateSpkNo(),
             deadlineDate: o.deadlineDate || o.deadline || '',
             status: o.status || 'Draft',
             players: Array.isArray(o.players) ? o.players : [],
-            assignedWorkerIds: o.assignedWorkerIds || (o.workers ? o.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3])
+            assignedWorkerIds: Array.isArray(o.assignedWorkerIds)
+              ? o.assignedWorkerIds
+              : (o.workers ? o.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            workflow: o.workflow || {
+              cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
+              sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
+            }
           }));
         }
       }
@@ -73,11 +81,44 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_CURRENT_ORDER);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.players) && parsed.players.length > 0) {
+        // Validasi keberadaan order berdasarkan data order (id / spkNumber / teamName), bukan jumlah player
+        if (parsed && typeof parsed === 'object' && (parsed.id || parsed.spkNumber || parsed.spkNo || parsed.teamName)) {
           return {
+            ...DEFAULT_INITIAL_ORDER,
             ...parsed,
             spkNumber: parsed.spkNumber || parsed.spkNo || 'SPK-2026/09/001',
             status: parsed.status || 'Draft',
+            players: Array.isArray(parsed.players) ? parsed.players : [],
+            assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds)
+              ? parsed.assignedWorkerIds
+              : (parsed.workers ? parsed.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            workflow: parsed.workflow || {
+              cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
+              sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
+            }
+          };
+        }
+      }
+
+      // Fallback: Jika current order belum ada, periksa database orders tersimpan
+      const savedDb = localStorage.getItem(STORAGE_KEY_ORDERS_DB);
+      if (savedDb) {
+        const parsedDb = JSON.parse(savedDb);
+        if (Array.isArray(parsedDb) && parsedDb.length > 0 && parsedDb[0] && typeof parsedDb[0] === 'object') {
+          const firstOrder = parsedDb[0];
+          return {
+            ...DEFAULT_INITIAL_ORDER,
+            ...firstOrder,
+            spkNumber: firstOrder.spkNumber || firstOrder.spkNo || 'SPK-2026/09/001',
+            status: firstOrder.status || 'Draft',
+            players: Array.isArray(firstOrder.players) ? firstOrder.players : [],
+            assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds)
+              ? firstOrder.assignedWorkerIds
+              : (firstOrder.workers ? firstOrder.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            workflow: firstOrder.workflow || {
+              cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
+              sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
+            }
           };
         }
       }
@@ -104,27 +145,46 @@ export default function App() {
   });
 
   // Modals state
+  const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [isOrderListModalOpen, setIsOrderListModalOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   // Sync orders db to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_ORDERS_DB, JSON.stringify(orders));
-    } catch (e) {
+      setStorageError(null);
+    } catch (e: any) {
       console.error('Error saving orders db', e);
+      if (e?.name === 'QuotaExceededError' || e?.code === 22) {
+        setStorageError('Penyimpanan browser penuh. Foto belum berhasil disimpan. Hapus beberapa foto/order lama lalu coba lagi.');
+      }
     }
   }, [orders]);
 
-  // Sync current order to localStorage
+  // Sync current order to localStorage and update in orders list if present
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_CURRENT_ORDER, JSON.stringify(currentOrder));
       localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(currentOrder.players));
-    } catch (e) {
+      setStorageError(null);
+      setOrders((prev) => {
+        const index = prev.findIndex((o) => o.id === currentOrder.id);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = currentOrder;
+          return updated;
+        }
+        return [currentOrder, ...prev];
+      });
+    } catch (e: any) {
       console.error('Error saving current order', e);
+      if (e?.name === 'QuotaExceededError' || e?.code === 22) {
+        setStorageError('Penyimpanan browser penuh. Foto belum berhasil disimpan. Hapus beberapa foto/order lama lalu coba lagi.');
+      }
     }
   }, [currentOrder]);
 
@@ -148,39 +208,16 @@ export default function App() {
     }));
   };
 
-  // ➕ Order Baru (Sesuai fungsi createNewOrder() pada HTML)
+  // ➕ Tambah Order (Buka Modal Pembuatan Order SPK & Excel)
   const createNewOrder = () => {
-    const newSpkId = `order-${Date.now()}`;
-    const newSpkNo = generateSpkNo();
+    setIsCreateOrderModalOpen(true);
+  };
 
-    const newOrder: OrderDetails = {
-      id: newSpkId,
-      spkNumber: newSpkNo,
-      teamName: 'TIM BARU',
-      clientContact: '',
-      orderDate: new Date().toISOString().split('T')[0],
-      deadlineDate: '',
-      fabricType: 'Dryfit Milano',
-      collarType: 'V-Neck Variasi',
-      printingType: 'Full Print Sublimasi',
-      pantsColor: 'Polos Non-Print + Nomor Polyflex',
-      assignedWorkerIds: [1, 3], // Default APLES (potong) & AKOK (jahit)
-      specialNotes: '',
-      status: 'Draft',
-      workflow: {
-        cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
-        sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
-      },
-      photos: [],
-      players: [
-        { id: `p-${Date.now()}-1`, name: 'PEMAIN 1', size: 'M', number: '10', note: 'PEMAIN', sleeve: 'pendek' },
-        { id: `p-${Date.now()}-2`, name: 'PEMAIN 2', size: 'L', number: '1', note: 'KIPER', sleeve: 'pendek' }
-      ],
-      updatedAt: new Date().toLocaleString('id-ID')
-    };
-
+  const handleSaveNewOrder = (newOrder: OrderDetails) => {
     setCurrentOrder(newOrder);
-    setSaveSuccess(false);
+    setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   // 💾 Simpan Order (Sesuai fungsi saveCurrentOrder() pada HTML)
@@ -268,11 +305,6 @@ export default function App() {
       active: true,
     };
     setWorkers((prev) => [...prev, newWorker]);
-    setCurrentOrder((prev) => ({
-      ...prev,
-      assignedWorkerIds: [...(prev.assignedWorkerIds || []), newWorker.id],
-      updatedAt: new Date().toLocaleString('id-ID'),
-    }));
   };
 
   const handleDeleteWorker = (id: number | string) => {
@@ -282,6 +314,12 @@ export default function App() {
       assignedWorkerIds: (prev.assignedWorkerIds || []).filter((wId) => wId !== id),
       updatedAt: new Date().toLocaleString('id-ID'),
     }));
+    setOrders((prev) =>
+      prev.map((o) => ({
+        ...o,
+        assignedWorkerIds: (o.assignedWorkerIds || []).filter((wId) => wId !== id),
+      }))
+    );
   };
 
   const handleUpdateWorkflow = (workflow: WorkflowProgress) => {
@@ -449,12 +487,13 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap gap-2 no-print">
-            {/* ➕ Order Baru */}
+            {/* ➕ Tambah Order */}
             <button
-              onClick={createNewOrder}
-              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-xs font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
+              onClick={() => setIsCreateOrderModalOpen(true)}
+              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-xs font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
             >
-              ➕ Order Baru
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>➕ Tambah Order</span>
             </button>
 
             {/* 💾 Simpan Order */}
@@ -515,11 +554,18 @@ export default function App() {
           onChange={handleUpdateOrderField}
         />
 
-        {/* Ceklis Nama Pegawai Per Order */}
+        {/* Penugasan Produksi & Tanggung Jawab Bengkel */}
         <WorkerAssignmentModule
           workers={workers}
           assignedWorkerIds={currentOrder.assignedWorkerIds || []}
+          orderStatus={currentOrder.status}
+          cuttingStatus={currentOrder.cuttingStatus || 'Belum Mulai'}
+          sewingStatus={currentOrder.sewingStatus || 'Belum Mulai'}
+          workerNotes={currentOrder.workerNotes || ''}
           onToggleWorker={handleToggleWorker}
+          onChangeCuttingStatus={(status) => handleUpdateOrderField('cuttingStatus', status)}
+          onChangeSewingStatus={(status) => handleUpdateOrderField('sewingStatus', status)}
+          onChangeWorkerNotes={(notes) => handleUpdateOrderField('workerNotes', notes)}
           onOpenManageModal={() => setIsWorkerModalOpen(true)}
         />
 
@@ -552,6 +598,7 @@ export default function App() {
         <PhotoProofModule
           photos={currentOrder.photos}
           onChange={handleUpdatePhotos}
+          storageError={storageError}
         />
 
         {/* Awareness Alert */}
@@ -560,6 +607,14 @@ export default function App() {
         />
 
       </main>
+
+      {/* Modal Tambah Order Baru (SPK & Excel Parser) */}
+      <CreateOrderModal
+        isOpen={isCreateOrderModalOpen}
+        onClose={() => setIsCreateOrderModalOpen(false)}
+        onSaveOrder={handleSaveNewOrder}
+        generateNewSpkNo={generateSpkNo}
+      />
 
       {/* Modal Riwayat Order (#orderListModal) */}
       <OrderListModal
