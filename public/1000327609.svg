@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+  <!-- Background Badge -->
+  <rect x="2" y="2" width="236" height="76" rx="12" fill="url(#grad)" stroke="#4f46e5" stroke-width="2.5" />
+  
+  <!-- Emblem Shield -->
+  <polygon points="40,12 68,26 68,54 40,68 12,54 12,26" fill="#1e1b4b" stroke="#818cf8" stroke-width="2" />
+  <!-- Jersey shape inside emblem -->
+  <path d="M28,28 L35,32 L40,32 L45,32 L52,28 L60,36 L55,42 L52,39 L52,58 L28,58 L28,39 L25,42 L20,36 Z" fill="#4f46e5" stroke="#38bdf8" stroke-width="1.5" />
+  <!-- Needle & Stitch line -->
+  <line x1="40" y1="18" x2="40" y2="60" stroke="#facc15" stroke-width="2" stroke-dasharray="3 2" />
+
+  <!-- Typography -->
+  <text x="80" y="38" fill="#ffffff" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-weight="900" font-size="20" letter-spacing="1.5">PROSTITCH</text>
+  <text x="80" y="56" fill="#38bdf8" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-weight="800" font-size="12" letter-spacing="3">JERSEY CUSTOM</text>
+  <text x="80" y="68" fill="#94a3b8" font-family="system-ui, sans-serif" font-weight="600" font-size="8" letter-spacing="0.5">EST. 2026 • WORKSHOP TAILOR</text>
+</svg>

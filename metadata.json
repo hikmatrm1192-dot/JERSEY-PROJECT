@@ -1,0 +1,6 @@
+{
+  "name": "Manajemen Jahit Jersey & SPK Konveksi",
+  "description": "Aplikasi manajemen pesanan jahit jersey, input nameset pemain, rekapitulasi otomatis pola potong & celana, serta cetak SPK konveksi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
