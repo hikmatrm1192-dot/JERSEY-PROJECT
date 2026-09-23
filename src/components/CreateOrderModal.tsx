@@ -4,6 +4,7 @@ import {
   Plus,
   Upload,
   FileSpreadsheet,
+  Image as ImageIcon,
   AlertCircle,
   AlertTriangle,
   Trash2,
@@ -15,6 +16,7 @@ import {
 import { OrderDetails, PlayerItem } from '../types/jersey';
 import { FABRIC_OPTIONS, COLLAR_OPTIONS } from '../data/defaultOrder';
 import { parseExcelPlayers, ExcelParseResult } from '../utils/excelParser';
+import { parseImagePlayers } from '../utils/imageParser';
 import { calculateProductionRecap, formatRupiah } from '../utils/orderCalculations';
 
 interface CreateOrderModalProps {
@@ -45,11 +47,16 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
   // Excel state
   const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [isImageParsing, setIsImageParsing] = useState(false);
+  const [imageParseError, setImageParseError] = useState('');
+  const [imageProgress, setImageProgress] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parseResult, setParseResult] = useState<ExcelParseResult | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize/reset form whenever modal opens
   useEffect(() => {
@@ -69,6 +76,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         );
         setNotes(initialOrder.specialNotes || '');
         setExcelFile(null);
+        setImageFiles([]);
+        setImageParseError('');
+        setImageProgress('');
         setParseResult(
           initialOrder.players && initialOrder.players.length > 0
             ? {
@@ -91,6 +101,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         setOrderValue('');
         setNotes('');
         setExcelFile(null);
+        setImageFiles([]);
+        setImageParseError('');
+        setImageProgress('');
         setParseResult(null);
         setIsParsing(false);
       }
@@ -159,6 +172,42 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     };
 
     reader.readAsArrayBuffer(file);
+  };
+
+  const handleImageFiles = async (files: File[]) => {
+    const valid = files.filter((file) => {
+      const type = file.type.toLowerCase();
+      return type === 'image/jpeg' || type === 'image/png' || /\.(jpe?g|png)$/i.test(file.name);
+    });
+    if (!valid.length) {
+      setImageParseError('File foto harus berformat JPG/JPEG atau PNG.');
+      return;
+    }
+    setImageFiles(valid);
+    setImageParseError('');
+    setIsImageParsing(true);
+    setImageProgress('Menyiapkan OCR...');
+    const result = await parseImagePlayers(valid, setImageProgress);
+    setIsImageParsing(false);
+    setImageProgress('');
+    if (result.error) setImageParseError(result.error);
+    setParseResult({
+      players: result.players,
+      unmappedColumns: [],
+      totalRows: result.players.length,
+      duplicateNumbers: []
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length) void handleImageFiles(files);
+  };
+
+  const handleClearImages = () => {
+    setImageFiles([]);
+    setImageParseError('');
+    setImageProgress('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -430,7 +479,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  2. Upload File Pemain / Nameset (Excel .xlsx / .xls)
+                  2. Upload Nameset Klien (Excel / JPG / PNG)
                 </h3>
               </div>
               <span className="text-[11px] text-slate-500 font-medium">
@@ -439,13 +488,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </div>
 
             {/* Hidden Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".xlsx,.xls"
-              className="hidden"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".xlsx,.xls" className="hidden" />
+            <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/jpeg,image/png,.jpg,.jpeg,.png" multiple className="hidden" />
 
             {!excelFile ? (
               /* Dropzone */
@@ -467,17 +511,25 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                   <Upload className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-slate-800 mb-1">
-                  Klik atau Tarik File Excel ke Sini
+                  Pilih Excel atau Foto Nameset
                 </p>
                 <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">
-                  Mendukung file format <strong>.xlsx</strong> atau <strong>.xls</strong> dari klien. Kolom otomatis dikenali: Nama, Ukuran/Size, Nomor Punggung, Keterangan.
+                  Mendukung <strong>Excel (.xlsx/.xls)</strong> atau <strong>JPG/PNG</strong>. Untuk foto, beberapa gambar dapat dipilih sekaligus dan dibaca otomatis dengan OCR. Hasil tetap bisa diperiksa di preview.
                 </p>
                 <button
                   type="button"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  <span>Pilih File Excel Klien</span>
+                  <span>Pilih Excel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); imageInputRef.current?.click(); }}
+                  className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Pilih Banyak Foto JPG/PNG</span>
                 </button>
               </div>
             ) : (
@@ -629,6 +681,23 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {imageFiles.length > 0 && (
+              <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">{imageFiles.length} foto nameset dipilih</p>
+                      <p className="text-[11px] text-slate-500">OCR membaca semua foto dan menggabungkan hasilnya.</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={handleClearImages} className="text-xs text-red-600 font-semibold">Hapus Foto</button>
+                </div>
+                {isImageParsing && <p className="mt-2 text-[11px] font-semibold text-blue-700">{imageProgress}</p>}
+                {imageParseError && <p className="mt-2 text-[11px] font-semibold text-red-600">{imageParseError}</p>}
               </div>
             )}
           </div>
