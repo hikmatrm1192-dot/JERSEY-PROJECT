@@ -53,9 +53,8 @@ export default function App() {
             status: o.status || 'Draft',
             orderValue: typeof o.orderValue === 'number' ? o.orderValue : (o.orderValue !== undefined && o.orderValue !== null && !isNaN(Number(o.orderValue)) ? Number(o.orderValue) : (o.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(o.players) ? o.players : [],
-            assignedWorkerIds: Array.isArray(o.assignedWorkerIds)
-              ? o.assignedWorkerIds
-              : (o.workers ? o.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            assignedWorkerIds: Array.isArray(o.assignedWorkerIds) ? o.assignedWorkerIds : [],
+            workerAssignments: Array.isArray(o.workerAssignments) ? o.workerAssignments : [],
             workflow: o.workflow || {
               cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
               sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
@@ -92,9 +91,8 @@ export default function App() {
             status: parsed.status || 'Draft',
             orderValue: typeof parsed.orderValue === 'number' ? parsed.orderValue : (parsed.orderValue !== undefined && parsed.orderValue !== null && !isNaN(Number(parsed.orderValue)) ? Number(parsed.orderValue) : (parsed.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(parsed.players) ? parsed.players : [],
-            assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds)
-              ? parsed.assignedWorkerIds
-              : (parsed.workers ? parsed.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds) ? parsed.assignedWorkerIds : [],
+            workerAssignments: Array.isArray(parsed.workerAssignments) ? parsed.workerAssignments : [],
             workflow: parsed.workflow || {
               cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
               sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
@@ -116,9 +114,8 @@ export default function App() {
             status: firstOrder.status || 'Draft',
             orderValue: typeof firstOrder.orderValue === 'number' ? firstOrder.orderValue : (firstOrder.orderValue !== undefined && firstOrder.orderValue !== null && !isNaN(Number(firstOrder.orderValue)) ? Number(firstOrder.orderValue) : (firstOrder.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(firstOrder.players) ? firstOrder.players : [],
-            assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds)
-              ? firstOrder.assignedWorkerIds
-              : (firstOrder.workers ? firstOrder.workers.filter((w: any) => w.active).map((w: any) => w.id) : [1, 3]),
+            assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds) ? firstOrder.assignedWorkerIds : [],
+            workerAssignments: Array.isArray(firstOrder.workerAssignments) ? firstOrder.workerAssignments : [],
             workflow: firstOrder.workflow || {
               cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
               sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
