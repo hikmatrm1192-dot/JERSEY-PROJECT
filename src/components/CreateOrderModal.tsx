@@ -294,6 +294,34 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 />
               </div>
 
+              {/* Nilai Order */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nilai Order <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
+                    Rp
+                  </span>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="1000"
+                    inputMode="numeric"
+                    placeholder="Contoh: 8500000"
+                    value={orderValue}
+                    onChange={(e) => setOrderValue(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                {typeof orderValue === 'number' && orderValue > 0 && (
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                    {formatRupiah(orderValue)}
+                  </p>
+                )}
+              </div>
+
               {/* Jenis Bahan */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
