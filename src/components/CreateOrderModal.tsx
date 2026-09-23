@@ -22,13 +22,15 @@ interface CreateOrderModalProps {
   onClose: () => void;
   onSaveOrder: (newOrder: OrderDetails) => void;
   generateNewSpkNo: () => string;
+  initialOrder?: OrderDetails | null;
 }
 
 export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   isOpen,
   onClose,
   onSaveOrder,
-  generateNewSpkNo
+  generateNewSpkNo,
+  initialOrder
 }) => {
   // Form fields
   const [teamName, setTeamName] = useState('');
@@ -38,7 +40,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const [clientContact, setClientContact] = useState('');
   const [fabricType, setFabricType] = useState('Dryfit Milano');
   const [collarType, setCollarType] = useState('V-Neck Variasi');
-  const [orderValue, setOrderValue] = useState<number | ''>('');
+  const [orderValue, setOrderValue] = useState<string>('');
   const [notes, setNotes] = useState('');
 
   // Excel state
@@ -52,20 +54,48 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   // Initialize/reset form whenever modal opens
   useEffect(() => {
     if (isOpen) {
-      setTeamName('');
-      setSpkNumber(generateNewSpkNo());
-      setOrderDate(new Date().toISOString().split('T')[0]);
-      setDeadlineDate('');
-      setClientContact('');
-      setFabricType('Dryfit Milano');
-      setCollarType('V-Neck Variasi');
-      setOrderValue('');
-      setNotes('');
-      setExcelFile(null);
-      setParseResult(null);
-      setIsParsing(false);
+      if (initialOrder) {
+        setTeamName(initialOrder.teamName || '');
+        setSpkNumber(initialOrder.spkNumber || generateNewSpkNo());
+        setOrderDate(initialOrder.orderDate || new Date().toISOString().split('T')[0]);
+        setDeadlineDate(initialOrder.deadlineDate || '');
+        setClientContact(initialOrder.clientContact || '');
+        setFabricType(initialOrder.fabricType || 'Dryfit Milano');
+        setCollarType(initialOrder.collarType || 'V-Neck Variasi');
+        setOrderValue(
+          initialOrder.orderValue !== undefined && initialOrder.orderValue !== null
+            ? String(initialOrder.orderValue)
+            : ''
+        );
+        setNotes(initialOrder.specialNotes || '');
+        setExcelFile(null);
+        setParseResult(
+          initialOrder.players && initialOrder.players.length > 0
+            ? {
+                players: initialOrder.players,
+                unmappedColumns: [],
+                totalRows: initialOrder.players.length,
+                duplicateNumbers: []
+              }
+            : null
+        );
+        setIsParsing(false);
+      } else {
+        setTeamName('');
+        setSpkNumber(generateNewSpkNo());
+        setOrderDate(new Date().toISOString().split('T')[0]);
+        setDeadlineDate('');
+        setClientContact('');
+        setFabricType('Dryfit Milano');
+        setCollarType('V-Neck Variasi');
+        setOrderValue('');
+        setNotes('');
+        setExcelFile(null);
+        setParseResult(null);
+        setIsParsing(false);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialOrder, generateNewSpkNo]);
 
   if (!isOpen) return null;
 
@@ -163,33 +193,39 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       return;
     }
 
-    const players: PlayerItem[] = parseResult?.players || [];
+    if (orderValue === '' || isNaN(Number(orderValue)) || Number(orderValue) < 0) {
+      alert('Mohon isi Nilai Order yang valid (minimal Rp0).');
+      return;
+    }
+
+    const parsedOrderValue = Number(orderValue);
+    const players: PlayerItem[] = parseResult?.players || initialOrder?.players || [];
 
     const newOrder: OrderDetails = {
-      id: `order-${Date.now()}`,
+      id: initialOrder?.id || `order-${Date.now()}`,
       spkNumber: spkNumber.trim() || generateNewSpkNo(),
       teamName: teamName.trim().toUpperCase(),
       clientContact: clientContact.trim(),
       orderDate: orderDate || new Date().toISOString().split('T')[0],
       deadlineDate: deadlineDate || '',
       specialNotes: notes.trim(),
-      pantsColor: 'Polos Non-Print + Nomor Polyflex',
-      status: 'Draft',
-      orderValue: typeof orderValue === 'number' ? orderValue : (Number(orderValue) || 0),
-      assignedWorkerIds: [],
-      workerAssignments: [],
-      cuttingStatus: 'Belum Mulai',
-      sewingStatus: 'Belum Mulai',
-      workerNotes: '',
+      pantsColor: initialOrder?.pantsColor || 'Polos Non-Print + Nomor Polyflex',
+      status: initialOrder?.status || 'Draft',
+      orderValue: parsedOrderValue,
+      assignedWorkerIds: initialOrder?.assignedWorkerIds || [],
+      workerAssignments: initialOrder?.workerAssignments || [],
+      cuttingStatus: initialOrder?.cuttingStatus || 'Belum Mulai',
+      sewingStatus: initialOrder?.sewingStatus || 'Belum Mulai',
+      workerNotes: initialOrder?.workerNotes || '',
       fabricType: fabricType || 'Dryfit Milano',
       collarType: collarType || 'V-Neck Variasi',
-      printingType: 'Bahan Siap Jahit (Print Selesai)', // ProStitch business constraint
-      workflow: {
+      printingType: initialOrder?.printingType || 'Bahan Siap Jahit (Print Selesai)', // ProStitch business constraint
+      workflow: initialOrder?.workflow || {
         cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
         sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
       },
       players,
-      photos: [],
+      photos: initialOrder?.photos || [],
       updatedAt: new Date().toLocaleString('id-ID')
     };
 
@@ -300,7 +336,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                   Nilai Order <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 pointer-events-none">
                     Rp
                   </span>
                   <input
@@ -311,13 +347,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     inputMode="numeric"
                     placeholder="Contoh: 8500000"
                     value={orderValue}
-                    onChange={(e) => setOrderValue(e.target.value === '' ? '' : Number(e.target.value))}
+                    onChange={(e) => setOrderValue(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                {typeof orderValue === 'number' && orderValue > 0 && (
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                    {formatRupiah(orderValue)}
+                {orderValue !== '' && !isNaN(Number(orderValue)) && Number(orderValue) >= 0 && (
+                  <p className="mt-1 text-[11px] font-semibold text-emerald-600">
+                    Rp{Number(orderValue).toLocaleString('id-ID')}
                   </p>
                 )}
               </div>
@@ -616,11 +652,11 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isParsing || !teamName.trim()}
+              disabled={isParsing || !teamName.trim() || orderValue === '' || isNaN(Number(orderValue)) || Number(orderValue) < 0}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Buat Order SPK</span>
+              <span>{initialOrder ? 'Simpan Perubahan Order' : 'Buat Order SPK'}</span>
             </button>
           </div>
         </form>

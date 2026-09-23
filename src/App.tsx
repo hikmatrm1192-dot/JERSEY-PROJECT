@@ -51,6 +51,7 @@ export default function App() {
             spkNumber: o.spkNumber || o.spkNo || generateSpkNo(),
             deadlineDate: o.deadlineDate || o.deadline || '',
             status: o.status || 'Draft',
+            orderValue: typeof o.orderValue === 'number' ? o.orderValue : (o.orderValue !== undefined && o.orderValue !== null && !isNaN(Number(o.orderValue)) ? Number(o.orderValue) : (o.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(o.players) ? o.players : [],
             assignedWorkerIds: Array.isArray(o.assignedWorkerIds)
               ? o.assignedWorkerIds
@@ -89,6 +90,7 @@ export default function App() {
             ...parsed,
             spkNumber: parsed.spkNumber || parsed.spkNo || 'SPK-2026/09/001',
             status: parsed.status || 'Draft',
+            orderValue: typeof parsed.orderValue === 'number' ? parsed.orderValue : (parsed.orderValue !== undefined && parsed.orderValue !== null && !isNaN(Number(parsed.orderValue)) ? Number(parsed.orderValue) : (parsed.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(parsed.players) ? parsed.players : [],
             assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds)
               ? parsed.assignedWorkerIds
@@ -112,6 +114,7 @@ export default function App() {
             ...firstOrder,
             spkNumber: firstOrder.spkNumber || firstOrder.spkNo || 'SPK-2026/09/001',
             status: firstOrder.status || 'Draft',
+            orderValue: typeof firstOrder.orderValue === 'number' ? firstOrder.orderValue : (firstOrder.orderValue !== undefined && firstOrder.orderValue !== null && !isNaN(Number(firstOrder.orderValue)) ? Number(firstOrder.orderValue) : (firstOrder.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(firstOrder.players) ? firstOrder.players : [],
             assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds)
               ? firstOrder.assignedWorkerIds
@@ -228,6 +231,7 @@ export default function App() {
     const updatedOrder: OrderDetails = {
       ...currentOrder,
       teamName: currentOrder.teamName.trim().toUpperCase() || 'TANPA NAMA TIM',
+      orderValue: typeof currentOrder.orderValue === 'number' ? currentOrder.orderValue : (Number(currentOrder.orderValue) || 0),
       updatedAt: new Date().toLocaleString('id-ID'),
     };
 

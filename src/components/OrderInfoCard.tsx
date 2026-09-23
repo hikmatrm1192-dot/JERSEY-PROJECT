@@ -10,8 +10,8 @@ interface OrderInfoCardProps {
 export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, onChange }) => {
   return (
     <>
-      {/* Detail SPK & Order Info (Format 5 Kolom Persis HTML Terbaru) */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs shadow-2xs">
+      {/* Detail SPK & Order Info */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs shadow-2xs">
         <div>
           <label className="block font-bold text-slate-500 mb-1 uppercase">NAMA TIM / ORDER</label>
           <input
@@ -57,6 +57,31 @@ export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, onChange })
             onChange={(e) => onChange('deadlineDate', e.target.value)}
             className="w-full bg-white border border-red-300 rounded p-1.5 font-bold text-red-600 focus:ring-1 focus:ring-red-500 outline-none cursor-pointer"
           />
+        </div>
+
+        <div>
+          <label className="block font-bold text-slate-500 mb-1 uppercase">NILAI ORDER</label>
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 pointer-events-none">
+              Rp
+            </span>
+            <input
+              type="number"
+              id="orderValue"
+              min="0"
+              step="1000"
+              inputMode="numeric"
+              value={order.orderValue !== undefined && order.orderValue !== null ? order.orderValue : ''}
+              onChange={(e) => onChange('orderValue', e.target.value === '' ? 0 : Number(e.target.value))}
+              placeholder="Contoh: 8500000"
+              className="w-full bg-white border border-slate-300 rounded p-1.5 pl-8 font-bold text-emerald-700 focus:ring-1 focus:ring-indigo-500 outline-none"
+            />
+          </div>
+          {order.orderValue !== undefined && order.orderValue > 0 && (
+            <span className="text-[10px] font-semibold text-emerald-600 block mt-0.5">
+              Rp{Number(order.orderValue).toLocaleString('id-ID')}
+            </span>
+          )}
         </div>
 
         <div>
