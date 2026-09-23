@@ -8,6 +8,7 @@ import { Navbar } from './components/Navbar';
 import { OrderInfoCard } from './components/OrderInfoCard';
 import { WorkerAssignmentModule } from './components/WorkerAssignmentModule';
 import { WorkerModal } from './components/WorkerModal';
+import { AssignWorkerModal } from './components/AssignWorkerModal';
 import { OrderListModal } from './components/OrderListModal';
 import { WorkflowModules } from './components/WorkflowModules';
 import { PlayerTable } from './components/PlayerTable';
@@ -18,7 +19,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { CreateOrderModal } from './components/CreateOrderModal';
 import { SpkPrintView } from './components/SpkPrintView';
 import { ProStitchLogo } from './components/ProStitchLogo';
-import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, OrderStatus } from './types/jersey';
+import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, WorkerRole, WorkerAssignment } from './types/jersey';
 import { DEFAULT_INITIAL_ORDER, DEFAULT_WORKERS } from './data/defaultOrder';
 import { calculateProductionRecap } from './utils/orderCalculations';
 import { Check, Save, PlusCircle } from 'lucide-react';
@@ -149,6 +150,8 @@ export default function App() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [isOrderListModalOpen, setIsOrderListModalOpen] = useState(false);
+  const [isAssignWorkerModalOpen, setIsAssignWorkerModalOpen] = useState(false);
+  const [assignmentOrder, setAssignmentOrder] = useState<OrderDetails | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
 
@@ -282,44 +285,32 @@ export default function App() {
   };
 
   // Handlers for Worker Assignment
-  const handleToggleWorker = (id: number | string) => {
-    setCurrentOrder((prev) => {
-      const currentAssigned = prev.assignedWorkerIds || [];
-      const isAssigned = currentAssigned.includes(id);
-      const newAssigned = isAssigned
-        ? currentAssigned.filter((wId) => wId !== id)
-        : [...currentAssigned, id];
-      return {
-        ...prev,
-        assignedWorkerIds: newAssigned,
-        updatedAt: new Date().toLocaleString('id-ID'),
-      };
-    });
+  const openAssignmentModal = (order: OrderDetails) => {
+    setAssignmentOrder(order);
+    setIsAssignWorkerModalOpen(true);
   };
 
-  const handleAddWorker = (name: string, role: 'potong' | 'jahit') => {
-    const newWorker: WorkerItem = {
-      id: Date.now(),
-      name,
-      role,
-      active: true,
-    };
+  const handleSaveAssignments = (orderId: string, assignments: WorkerAssignment[], workerNotes?: string) => {
+    const updatedAt = new Date().toLocaleString('id-ID');
+    const assignedWorkerIds = Array.from(new Set(assignments.map((a) => a.workerId)));
+    const patch = { workerAssignments: assignments, assignedWorkerIds, workerNotes: workerNotes || '', updatedAt };
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, ...patch } : o));
+    setCurrentOrder((prev) => prev.id === orderId ? { ...prev, ...patch } : prev);
+    setAssignmentOrder((prev) => prev?.id === orderId ? { ...prev, ...patch } : prev);
+  };
+
+  const handleAddWorker = (name: string, role: WorkerRole, wagePerPiece: number) => {
+    const newWorker: WorkerItem = { id: Date.now(), name, role, wagePerPiece, active: true };
     setWorkers((prev) => [...prev, newWorker]);
   };
 
+  const handleToggleWorkerActive = (id: number | string) => {
+    setWorkers((prev) => prev.map((w) => w.id === id ? { ...w, active: w.active === false } : w));
+  };
+
   const handleDeleteWorker = (id: number | string) => {
+    // Hapus dari master saja. Histori assignment order tidak diubah.
     setWorkers((prev) => prev.filter((w) => w.id !== id));
-    setCurrentOrder((prev) => ({
-      ...prev,
-      assignedWorkerIds: (prev.assignedWorkerIds || []).filter((wId) => wId !== id),
-      updatedAt: new Date().toLocaleString('id-ID'),
-    }));
-    setOrders((prev) =>
-      prev.map((o) => ({
-        ...o,
-        assignedWorkerIds: (o.assignedWorkerIds || []).filter((wId) => wId !== id),
-      }))
-    );
   };
 
   const handleUpdateWorkflow = (workflow: WorkflowProgress) => {
@@ -554,20 +545,18 @@ export default function App() {
           onChange={handleUpdateOrderField}
         />
 
-        {/* Penugasan Produksi & Tanggung Jawab Bengkel */}
-        <WorkerAssignmentModule
-          workers={workers}
-          assignedWorkerIds={currentOrder.assignedWorkerIds || []}
-          orderStatus={currentOrder.status}
-          cuttingStatus={currentOrder.cuttingStatus || 'Belum Mulai'}
-          sewingStatus={currentOrder.sewingStatus || 'Belum Mulai'}
-          workerNotes={currentOrder.workerNotes || ''}
-          onToggleWorker={handleToggleWorker}
-          onChangeCuttingStatus={(status) => handleUpdateOrderField('cuttingStatus', status)}
-          onChangeSewingStatus={(status) => handleUpdateOrderField('sewingStatus', status)}
-          onChangeWorkerNotes={(notes) => handleUpdateOrderField('workerNotes', notes)}
-          onOpenManageModal={() => setIsWorkerModalOpen(true)}
-        />
+        {/* Penugasan Order & Biaya Upah */}
+        <section className="mb-6 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black text-slate-900">Penugasan Pekerja & Biaya Upah</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Penugasan selalu terikat pada order/SPK yang sedang dibuka.</p>
+            </div>
+            <button type="button" onClick={() => openAssignmentModal(currentOrder)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold">
+              👷 {currentOrder.workerAssignments?.length ? 'Edit Penugasan' : 'Tugaskan Pekerja'}
+            </button>
+          </div>
+        </section>
 
         {/* Modul Alur Workshop */}
         <WorkflowModules
@@ -622,7 +611,9 @@ export default function App() {
         onClose={() => setIsOrderListModalOpen(false)}
         orders={orders}
         currentOrderId={currentOrder.id}
+        workers={workers}
         onSelectOrder={loadOrder}
+        onAssignWorker={openAssignmentModal}
         onDeleteOrder={deleteOrder}
         onNewOrder={createNewOrder}
       />
@@ -633,7 +624,16 @@ export default function App() {
         onClose={() => setIsWorkerModalOpen(false)}
         workers={workers}
         onAddWorker={handleAddWorker}
+        onToggleWorkerActive={handleToggleWorkerActive}
         onDeleteWorker={handleDeleteWorker}
+      />
+
+      <AssignWorkerModal
+        isOpen={isAssignWorkerModalOpen}
+        onClose={() => { setIsAssignWorkerModalOpen(false); setAssignmentOrder(null); }}
+        order={assignmentOrder}
+        workers={workers}
+        onSaveAssignments={handleSaveAssignments}
       />
 
       {/* Paste / Bulk Import Modal */}
