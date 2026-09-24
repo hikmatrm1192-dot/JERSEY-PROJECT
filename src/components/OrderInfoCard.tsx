@@ -4,12 +4,40 @@ import { FABRIC_OPTIONS, COLLAR_OPTIONS } from '../data/defaultOrder';
 
 interface OrderInfoCardProps {
   order: OrderDetails;
+  orders: OrderDetails[];
   onChange: (field: keyof OrderDetails, value: any) => void;
+  onSelectOrder: (id: string) => void;
 }
 
-export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, onChange }) => {
+export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, orders, onChange, onSelectOrder }) => {
+  const activeStatuses = new Set(['Bahan Diterima', 'Proses Potong', 'Proses Jahit', 'QC Passed']);
+  const activeOrders = orders.filter((o) => activeStatuses.has(o.status));
+
   return (
     <>
+      <div className="mb-3 bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs">
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <div className="shrink-0">
+            <div className="font-black text-indigo-900 uppercase">Order Aktif / Sedang Dikerjakan</div>
+            <div className="text-[10px] text-indigo-600 mt-0.5">Pilih SPK yang akan dikontrol pada menu produksi di bawah.</div>
+          </div>
+          <select
+            value={order.id}
+            onChange={(e) => onSelectOrder(e.target.value)}
+            className="flex-1 bg-white border border-indigo-300 rounded-lg p-2 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          >
+            {activeOrders.length === 0 ? (
+              <option value={order.id}>{order.teamName || 'Order saat ini'} — {order.spkNumber}</option>
+            ) : (
+              activeOrders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.teamName || 'TANPA NAMA'} — {o.spkNumber} — {o.status}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+      </div>
       {/* Detail SPK & Order Info */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-xs shadow-2xs">
         <div>
