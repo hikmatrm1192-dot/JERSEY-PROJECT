@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { OrderDetails, WorkerItem } from '../types/jersey';
-import { formatRupiah, calculateOrderWages } from '../utils/orderCalculations';
+import { formatRupiah, calculateOrderWages, calculateOrderFinances } from '../utils/orderCalculations';
 import { Search, Trash2, FolderOpen, Calendar, Clock, Layers, Users, Scissors, ChevronRight } from 'lucide-react';
 
 interface OrderListModalProps {
@@ -129,7 +129,7 @@ export const OrderListModal: React.FC<OrderListModalProps> = ({
             filteredOrders.map((o) => {
               const isSelected = o.id === currentOrderId;
               const totalPcs = o.players ? o.players.length : 0;
-              const wages = calculateOrderWages(o.workerAssignments);
+              const finances = calculateOrderFinances(o);
 
               // Gather Potong & Jahit worker names
               const potongWorkers: string[] = [];
@@ -248,19 +248,21 @@ export const OrderListModal: React.FC<OrderListModalProps> = ({
                     </div>
                     <div>
                       <span className="text-slate-400 font-sans block text-[10px]">NILAI ORDER (DARI KLIEN)</span>
-                      <span className="font-bold text-emerald-800">
-                        {formatRupiah(o.orderValue || 0)}
+                      <span className="font-bold text-blue-900">
+                        {formatRupiah(finances.orderValue)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 font-sans block text-[10px]">TOTAL BIAYA UPAH</span>
-                      <span className="font-bold text-indigo-900">
-                        {formatRupiah(wages.totalWage)}
+                      <span className="text-slate-400 font-sans block text-[10px]">TOTAL BIAYA (UPAH+OPS)</span>
+                      <span className="font-bold text-rose-800">
+                        {formatRupiah(finances.totalCost)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 font-sans block text-[10px]">DEADLINE KIRIM</span>
-                      <span className="font-bold text-red-600 font-sans">{o.deadlineDate || '-'}</span>
+                      <span className="text-slate-400 font-sans block text-[10px]">LABA BERSIH</span>
+                      <span className={`font-black ${finances.netProfit >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
+                        {formatRupiah(finances.netProfit)}
+                      </span>
                     </div>
                   </div>
 

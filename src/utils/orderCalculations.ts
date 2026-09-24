@@ -1,4 +1,4 @@
-import { OrderDetails, PlayerItem, ProductionRecap, WorkerAssignment } from '../types/jersey';
+import { OrderDetails, OperationalCost, PlayerItem, ProductionRecap, WorkerAssignment } from '../types/jersey';
 
 export interface ExtendedProductionRecap extends ProductionRecap {
   specialNotes: string[];
@@ -140,9 +140,23 @@ export function exportToCSV(order: OrderDetails): void {
   document.body.removeChild(link);
 }
 
+export const OPERATIONAL_COST_CATEGORIES = [
+  'Listrik',
+  'Transportasi',
+  'Packaging',
+  'Administrasi',
+  'Perawatan Mesin',
+  'Konsumsi',
+  'Lain-lain',
+] as const;
+
 export function formatRupiah(amount: number): string {
-  if (isNaN(amount) || amount === undefined || amount === null) return 'Rp 0';
-  return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+  if (isNaN(amount) || amount === undefined || amount === null) return 'Rp0';
+  const rounded = Math.round(amount);
+  if (rounded < 0) {
+    return '-Rp' + Math.abs(rounded).toLocaleString('id-ID');
+  }
+  return 'Rp' + rounded.toLocaleString('id-ID');
 }
 
 export interface OrderWagesBreakdown {
@@ -189,6 +203,44 @@ export function calculateOrderWages(assignments?: WorkerAssignment[]): OrderWage
     totalWage: cuttingWage + sewingWage,
     cuttingPcs,
     sewingPcs,
+  };
+}
+
+export function calculateOperationalCosts(costs?: OperationalCost[]): number {
+  if (!costs || !Array.isArray(costs) || costs.length === 0) {
+    return 0;
+  }
+  return costs.reduce((sum, item) => {
+    const amt = Math.max(0, Number(item?.amount) || 0);
+    return sum + amt;
+  }, 0);
+}
+
+export interface OrderFinancialSummary {
+  orderValue: number;
+  cuttingWage: number;
+  sewingWage: number;
+  totalWage: number;
+  totalOperationalCost: number;
+  totalCost: number;
+  netProfit: number;
+}
+
+export function calculateOrderFinances(order: OrderDetails): OrderFinancialSummary {
+  const orderValue = Math.max(0, Number(order.orderValue) || 0);
+  const wages = calculateOrderWages(order.workerAssignments);
+  const totalOperationalCost = calculateOperationalCosts(order.operationalCosts);
+  const totalCost = wages.totalWage + totalOperationalCost;
+  const netProfit = orderValue - totalCost;
+
+  return {
+    orderValue,
+    cuttingWage: wages.cuttingWage,
+    sewingWage: wages.sewingWage,
+    totalWage: wages.totalWage,
+    totalOperationalCost,
+    totalCost,
+    netProfit,
   };
 }
 

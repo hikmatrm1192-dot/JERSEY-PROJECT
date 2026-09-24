@@ -46,6 +46,13 @@ export interface WorkerAssignment {
   totalWage: number;
 }
 
+export interface OperationalCost {
+  id: string;
+  category: string;
+  description?: string;
+  amount: number;
+}
+
 export interface OrderDetails {
   id: string;
   spkNumber: string;
@@ -61,6 +68,7 @@ export interface OrderDetails {
   sewingTeam?: string;
   orderValue?: number;
   workerAssignments?: WorkerAssignment[];
+  operationalCosts?: OperationalCost[];
   assignedWorkerIds?: (number | string)[];
   cuttingStatus?: DivisionStatus;
   sewingStatus?: DivisionStatus;

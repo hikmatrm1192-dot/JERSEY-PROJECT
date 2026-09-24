@@ -19,7 +19,8 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { CreateOrderModal } from './components/CreateOrderModal';
 import { SpkPrintView } from './components/SpkPrintView';
 import { ProStitchLogo } from './components/ProStitchLogo';
-import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, WorkerRole, WorkerAssignment } from './types/jersey';
+import { OrderFinancialModule } from './components/OrderFinancialModule';
+import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, WorkerRole, WorkerAssignment, OperationalCost } from './types/jersey';
 import { DEFAULT_INITIAL_ORDER, DEFAULT_WORKERS } from './data/defaultOrder';
 import { calculateProductionRecap } from './utils/orderCalculations';
 import { Check, Save, PlusCircle } from 'lucide-react';
@@ -45,21 +46,31 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((o: any) => ({
-            ...DEFAULT_INITIAL_ORDER,
-            ...o,
-            spkNumber: o.spkNumber || o.spkNo || generateSpkNo(),
-            deadlineDate: o.deadlineDate || o.deadline || '',
-            status: o.status || 'Draft',
-            orderValue: typeof o.orderValue === 'number' ? o.orderValue : (o.orderValue !== undefined && o.orderValue !== null && !isNaN(Number(o.orderValue)) ? Number(o.orderValue) : (o.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
-            players: Array.isArray(o.players) ? o.players : [],
-            assignedWorkerIds: Array.isArray(o.assignedWorkerIds) ? o.assignedWorkerIds : [],
-            workerAssignments: Array.isArray(o.workerAssignments) ? o.workerAssignments : [],
-            workflow: o.workflow || {
-              cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
-              sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
-            }
-          }));
+          return parsed.map((o: any) => {
+            const isDefault = o.id === DEFAULT_INITIAL_ORDER.id;
+            return {
+              ...DEFAULT_INITIAL_ORDER,
+              ...o,
+              spkNumber: o.spkNumber || o.spkNo || generateSpkNo(),
+              deadlineDate: o.deadlineDate || o.deadline || '',
+              status: o.status || 'Draft',
+              orderValue: typeof o.orderValue === 'number' ? o.orderValue : (o.orderValue !== undefined && o.orderValue !== null && !isNaN(Number(o.orderValue)) ? Number(o.orderValue) : (isDefault ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
+              players: Array.isArray(o.players) ? o.players : [],
+              assignedWorkerIds: Array.isArray(o.assignedWorkerIds)
+                ? o.assignedWorkerIds
+                : (isDefault ? [1, 3] : []),
+              workerAssignments: Array.isArray(o.workerAssignments)
+                ? o.workerAssignments
+                : (isDefault ? (DEFAULT_INITIAL_ORDER.workerAssignments || []) : []),
+              operationalCosts: Array.isArray(o.operationalCosts)
+                ? o.operationalCosts
+                : [],
+              workflow: o.workflow || {
+                cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
+                sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
+              }
+            };
+          });
         }
       }
       // Check legacy list
@@ -84,15 +95,23 @@ export default function App() {
         const parsed = JSON.parse(saved);
         // Validasi keberadaan order berdasarkan data order (id / spkNumber / teamName), bukan jumlah player
         if (parsed && typeof parsed === 'object' && (parsed.id || parsed.spkNumber || parsed.spkNo || parsed.teamName)) {
+          const isDefault = parsed.id === DEFAULT_INITIAL_ORDER.id;
           return {
             ...DEFAULT_INITIAL_ORDER,
             ...parsed,
             spkNumber: parsed.spkNumber || parsed.spkNo || 'SPK-2026/09/001',
             status: parsed.status || 'Draft',
-            orderValue: typeof parsed.orderValue === 'number' ? parsed.orderValue : (parsed.orderValue !== undefined && parsed.orderValue !== null && !isNaN(Number(parsed.orderValue)) ? Number(parsed.orderValue) : (parsed.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
+            orderValue: typeof parsed.orderValue === 'number' ? parsed.orderValue : (parsed.orderValue !== undefined && parsed.orderValue !== null && !isNaN(Number(parsed.orderValue)) ? Number(parsed.orderValue) : (isDefault ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(parsed.players) ? parsed.players : [],
-            assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds) ? parsed.assignedWorkerIds : [],
-            workerAssignments: Array.isArray(parsed.workerAssignments) ? parsed.workerAssignments : [],
+            assignedWorkerIds: Array.isArray(parsed.assignedWorkerIds)
+              ? parsed.assignedWorkerIds
+              : (isDefault ? [1, 3] : []),
+            workerAssignments: Array.isArray(parsed.workerAssignments)
+              ? parsed.workerAssignments
+              : (isDefault ? (DEFAULT_INITIAL_ORDER.workerAssignments || []) : []),
+            operationalCosts: Array.isArray(parsed.operationalCosts)
+              ? parsed.operationalCosts
+              : [],
             workflow: parsed.workflow || {
               cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
               sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
@@ -107,15 +126,23 @@ export default function App() {
         const parsedDb = JSON.parse(savedDb);
         if (Array.isArray(parsedDb) && parsedDb.length > 0 && parsedDb[0] && typeof parsedDb[0] === 'object') {
           const firstOrder = parsedDb[0];
+          const isDefault = firstOrder.id === DEFAULT_INITIAL_ORDER.id;
           return {
             ...DEFAULT_INITIAL_ORDER,
             ...firstOrder,
             spkNumber: firstOrder.spkNumber || firstOrder.spkNo || 'SPK-2026/09/001',
             status: firstOrder.status || 'Draft',
-            orderValue: typeof firstOrder.orderValue === 'number' ? firstOrder.orderValue : (firstOrder.orderValue !== undefined && firstOrder.orderValue !== null && !isNaN(Number(firstOrder.orderValue)) ? Number(firstOrder.orderValue) : (firstOrder.id === DEFAULT_INITIAL_ORDER.id ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
+            orderValue: typeof firstOrder.orderValue === 'number' ? firstOrder.orderValue : (firstOrder.orderValue !== undefined && firstOrder.orderValue !== null && !isNaN(Number(firstOrder.orderValue)) ? Number(firstOrder.orderValue) : (isDefault ? DEFAULT_INITIAL_ORDER.orderValue : 0)),
             players: Array.isArray(firstOrder.players) ? firstOrder.players : [],
-            assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds) ? firstOrder.assignedWorkerIds : [],
-            workerAssignments: Array.isArray(firstOrder.workerAssignments) ? firstOrder.workerAssignments : [],
+            assignedWorkerIds: Array.isArray(firstOrder.assignedWorkerIds)
+              ? firstOrder.assignedWorkerIds
+              : (isDefault ? [1, 3] : []),
+            workerAssignments: Array.isArray(firstOrder.workerAssignments)
+              ? firstOrder.workerAssignments
+              : (isDefault ? (DEFAULT_INITIAL_ORDER.workerAssignments || []) : []),
+            operationalCosts: Array.isArray(firstOrder.operationalCosts)
+              ? firstOrder.operationalCosts
+              : [],
             workflow: firstOrder.workflow || {
               cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
               sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false }
@@ -298,6 +325,62 @@ export default function App() {
     setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, ...patch } : o));
     setCurrentOrder((prev) => prev.id === orderId ? { ...prev, ...patch } : prev);
     setAssignmentOrder((prev) => prev?.id === orderId ? { ...prev, ...patch } : prev);
+  };
+
+  // Handlers for Operational Costs
+  const handleAddOperationalCost = (cost: Omit<OperationalCost, 'id'>) => {
+    const newCost: OperationalCost = {
+      ...cost,
+      id: `cost-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      amount: Math.max(0, Number(cost.amount) || 0),
+    };
+    setCurrentOrder((prev) => {
+      const costs = Array.isArray(prev.operationalCosts) ? prev.operationalCosts : [];
+      return {
+        ...prev,
+        operationalCosts: [...costs, newCost],
+        updatedAt: new Date().toLocaleString('id-ID'),
+      };
+    });
+  };
+
+  const handleUpdateOperationalCost = (id: string, updatedCost: Partial<OperationalCost>) => {
+    setCurrentOrder((prev) => {
+      const costs = Array.isArray(prev.operationalCosts) ? prev.operationalCosts : [];
+      return {
+        ...prev,
+        operationalCosts: costs.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                ...updatedCost,
+                amount: updatedCost.amount !== undefined ? Math.max(0, Number(updatedCost.amount) || 0) : c.amount,
+              }
+            : c
+        ),
+        updatedAt: new Date().toLocaleString('id-ID'),
+      };
+    });
+  };
+
+  const handleDeleteOperationalCost = (id: string) => {
+    setCurrentOrder((prev) => {
+      const costs = Array.isArray(prev.operationalCosts) ? prev.operationalCosts : [];
+      return {
+        ...prev,
+        operationalCosts: costs.filter((c) => c.id !== id),
+        updatedAt: new Date().toLocaleString('id-ID'),
+      };
+    });
+  };
+
+  const handleUpdateOrderValue = (value: number) => {
+    const num = Math.max(0, Number(value) || 0);
+    setCurrentOrder((prev) => ({
+      ...prev,
+      orderValue: num,
+      updatedAt: new Date().toLocaleString('id-ID'),
+    }));
   };
 
   const handleAddWorker = (name: string, role: WorkerRole, wagePerPiece: number) => {
@@ -546,18 +629,15 @@ export default function App() {
           onChange={handleUpdateOrderField}
         />
 
-        {/* Penugasan Order & Biaya Upah */}
-        <section className="mb-6 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-black text-slate-900">Penugasan Pekerja & Biaya Upah</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Penugasan selalu terikat pada order/SPK yang sedang dibuka.</p>
-            </div>
-            <button type="button" onClick={() => openAssignmentModal(currentOrder)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold">
-              👷 {currentOrder.workerAssignments?.length ? 'Edit Penugasan' : 'Tugaskan Pekerja'}
-            </button>
-          </div>
-        </section>
+        {/* Modul Rincian Keuangan: Pemasukan, Biaya Upah, Biaya Operasional, & Laba Bersih */}
+        <OrderFinancialModule
+          order={currentOrder}
+          onOpenAssignModal={() => openAssignmentModal(currentOrder)}
+          onAddOperationalCost={handleAddOperationalCost}
+          onUpdateOperationalCost={handleUpdateOperationalCost}
+          onDeleteOperationalCost={handleDeleteOperationalCost}
+          onUpdateOrderValue={handleUpdateOrderValue}
+        />
 
         {/* Modul Alur Workshop */}
         <WorkflowModules

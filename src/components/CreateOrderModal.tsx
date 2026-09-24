@@ -263,6 +263,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       orderValue: parsedOrderValue,
       assignedWorkerIds: initialOrder?.assignedWorkerIds || [],
       workerAssignments: initialOrder?.workerAssignments || [],
+      operationalCosts: initialOrder?.operationalCosts || [],
       cuttingStatus: initialOrder?.cuttingStatus || 'Belum Mulai',
       sewingStatus: initialOrder?.sewingStatus || 'Belum Mulai',
       workerNotes: initialOrder?.workerNotes || '',

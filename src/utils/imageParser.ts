@@ -1,4 +1,4 @@
-import { createWorker } from 'tesseract.js';
+import { createWorker, PSM } from 'tesseract.js';
 import { PlayerItem } from '../types/jersey';
 
 const SIZE_PATTERN = /\b(XXXL|XXL|XL|L|M|S|XS)\b/i;
@@ -108,9 +108,9 @@ export async function parseImagePlayers(files: File[], onProgress?: (message: st
 
       // Two segmentation passes catch both normal tables and screenshots
       // where OCR needs sparse-text mode.
-      await worker.setParameters({ tessedit_pageseg_mode: '6' });
+      await worker.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK });
       const first = await worker.recognize(image);
-      await worker.setParameters({ tessedit_pageseg_mode: '11' });
+      await worker.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
       const second = await worker.recognize(image);
 
       const rawText = [first.data.text, second.data.text].join('\n');

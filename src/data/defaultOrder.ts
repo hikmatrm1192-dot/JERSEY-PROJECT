@@ -63,6 +63,7 @@ export const DEFAULT_INITIAL_ORDER: OrderDetails = {
     { workerId: 1, workerName: 'APLES', division: 'potong', quantity: 24, wagePerPiece: 1000, totalWage: 24000 },
     { workerId: 3, workerName: 'AKOK', division: 'jahit', quantity: 24, wagePerPiece: 2500, totalWage: 60000 }
   ],
+  operationalCosts: [],
   cuttingStatus: 'Selesai',
   sewingStatus: 'Sedang Dikerjakan',
   workerNotes: 'Akok fokus kerah dan lengan, Aples potong pola presisi.',
