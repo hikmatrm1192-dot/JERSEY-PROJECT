@@ -398,11 +398,46 @@ export default function App() {
   };
 
   const handleUpdateWorkflow = (workflow: WorkflowProgress) => {
-    setCurrentOrder((prev) => ({
-      ...prev,
-      workflow,
-      updatedAt: new Date().toLocaleString('id-ID'),
-    }));
+    const cuttingDone = [
+      workflow.cutting.patternCut,
+      workflow.cutting.pantsCollarCut,
+      workflow.cutting.specialItemsSeparated,
+    ].every(Boolean);
+    const sewingDone = [
+      workflow.sewing.bodySleeveJoined,
+      workflow.sewing.collarElasticSewed,
+      workflow.sewing.overdeckFinished,
+    ].every(Boolean);
+    const cuttingStarted = [
+      workflow.cutting.patternCut,
+      workflow.cutting.pantsCollarCut,
+      workflow.cutting.specialItemsSeparated,
+    ].some(Boolean);
+    const sewingStarted = [
+      workflow.sewing.bodySleeveJoined,
+      workflow.sewing.collarElasticSewed,
+      workflow.sewing.overdeckFinished,
+    ].some(Boolean);
+    const qcDone = workflow.productionChecklist?.qc === true;
+
+    setCurrentOrder((prev) => {
+      let status = prev.status;
+      if (qcDone) status = 'Selesai';
+      else if (sewingDone) status = 'QC Passed';
+      else if (sewingStarted) status = 'Proses Jahit';
+      else if (cuttingDone) status = 'Proses Jahit';
+      else if (cuttingStarted) status = 'Proses Potong';
+      else if (prev.status === 'Draft') status = 'Bahan Diterima';
+
+      return {
+        ...prev,
+        workflow,
+        status,
+        cuttingStatus: cuttingDone ? 'Selesai' : cuttingStarted ? 'Sedang Dikerjakan' : 'Belum Mulai',
+        sewingStatus: sewingDone ? 'Selesai' : sewingStarted ? 'Sedang Dikerjakan' : 'Belum Mulai',
+        updatedAt: new Date().toLocaleString('id-ID'),
+      };
+    });
   };
 
   const handleUpdatePhotos = (photos: string[]) => {
