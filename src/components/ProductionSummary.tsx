@@ -15,15 +15,57 @@ export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap, wor
     sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false },
     productionChecklist: { settingLayout: false, cutting: false, sewing: false, elastic: false, qc: false },
   };
-  const checklist = currentWorkflow.productionChecklist || {
-    settingLayout: false, cutting: false, sewing: false, elastic: false, qc: false,
+
+  const detailedCuttingDone = [
+    currentWorkflow.cutting.patternCut,
+    currentWorkflow.cutting.pantsCollarCut,
+    currentWorkflow.cutting.specialItemsSeparated,
+  ].every(Boolean);
+
+  const detailedSewingDone = [
+    currentWorkflow.sewing.bodySleeveJoined,
+    currentWorkflow.sewing.collarElasticSewed,
+    currentWorkflow.sewing.overdeckFinished,
+  ].every(Boolean);
+
+  // Checklist ringkasan harus mengikuti workflow detail order yang sedang aktif.
+  // Hanya Setting Layout dan QC & Packing yang tetap dikontrol dari checklist ringkasan.
+  const storedChecklist = currentWorkflow.productionChecklist || {
+    settingLayout: false,
+    cutting: false,
+    sewing: false,
+    elastic: false,
+    qc: false,
   };
 
-  const toggleCheck = (key: keyof typeof checklist) => {
+  const checklist = {
+    settingLayout: storedChecklist.settingLayout,
+    cutting: detailedCuttingDone,
+    sewing: detailedSewingDone,
+    elastic: currentWorkflow.sewing.collarElasticSewed === true,
+    qc: storedChecklist.qc,
+  };
+
+  const updateChecklist = (patch: Partial<NonNullable<WorkflowProgress['productionChecklist']>>) => {
     onChange({
       ...currentWorkflow,
-      productionChecklist: { ...checklist, [key]: !checklist[key] },
+      productionChecklist: {
+        ...storedChecklist,
+        ...patch,
+        // Nilai berikut adalah turunan workflow detail, bukan input terpisah.
+        cutting: detailedCuttingDone,
+        sewing: detailedSewingDone,
+        elastic: currentWorkflow.sewing.collarElasticSewed === true,
+      },
     });
+  };
+
+  const toggleSettingLayout = () => {
+    updateChecklist({ settingLayout: !checklist.settingLayout });
+  };
+
+  const toggleQc = () => {
+    updateChecklist({ qc: !checklist.qc });
   };
 
   const sortedSizes = Object.keys(recap.sizeJerseyCounts).sort((a, b) => {
@@ -88,45 +130,47 @@ export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap, wor
             <input
               type="checkbox"
               checked={checklist.settingLayout}
-              onChange={() => toggleCheck('settingLayout')}
+              onChange={toggleSettingLayout}
               className="accent-indigo-600 cursor-pointer"
             />
             <span>Setting Layout</span>
           </label>
 
-
-          <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
+          <label className={`border p-2 rounded flex items-center gap-1.5 transition-colors ${
             checklist.cutting ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
           }`}>
             <input
               type="checkbox"
               checked={checklist.cutting}
-              onChange={() => toggleCheck('cutting')}
-              className="accent-indigo-600 cursor-pointer"
+              readOnly
+              disabled
+              className="accent-indigo-600"
             />
             <span>Cutting / Potong</span>
           </label>
 
-          <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
+          <label className={`border p-2 rounded flex items-center gap-1.5 transition-colors ${
             checklist.sewing ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
           }`}>
             <input
               type="checkbox"
               checked={checklist.sewing}
-              onChange={() => toggleCheck('sewing')}
-              className="accent-indigo-600 cursor-pointer"
+              readOnly
+              disabled
+              className="accent-indigo-600"
             />
             <span>Proses Jahit</span>
           </label>
 
-          <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
+          <label className={`border p-2 rounded flex items-center gap-1.5 transition-colors ${
             checklist.elastic ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
           }`}>
             <input
               type="checkbox"
               checked={checklist.elastic}
-              onChange={() => toggleCheck('elastic')}
-              className="accent-indigo-600 cursor-pointer"
+              readOnly
+              disabled
+              className="accent-indigo-600"
             />
             <span>Pasang Karet</span>
           </label>
@@ -137,7 +181,7 @@ export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap, wor
             <input
               type="checkbox"
               checked={checklist.qc}
-              onChange={() => toggleCheck('qc')}
+              onChange={toggleQc}
               className="accent-indigo-600 cursor-pointer"
             />
             <span>QC & Packing</span>
