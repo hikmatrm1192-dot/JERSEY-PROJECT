@@ -661,7 +661,9 @@ export default function App() {
         {/* Detail SPK & Order Info (Format 5 Kolom: Team, SPK No, WA, Deadline, Status) */}
         <OrderInfoCard
           order={currentOrder}
+          orders={orders}
           onChange={handleUpdateOrderField}
+          onSelectOrder={loadOrder}
         />
 
         {/* Modul Rincian Keuangan: Pemasukan, Biaya Upah, Biaya Operasional, & Laba Bersih */}
