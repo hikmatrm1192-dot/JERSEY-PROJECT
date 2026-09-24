@@ -9,12 +9,14 @@ interface PhotoProofModuleProps {
   photos?: string[];
   onChange: (photos: string[]) => void;
   storageError?: string | null;
+  canUpload?: boolean;
 }
 
 export const PhotoProofModule: React.FC<PhotoProofModuleProps> = ({
   photos = [],
   onChange,
-  storageError
+  storageError,
+  canUpload = true
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{
@@ -24,6 +26,10 @@ export const PhotoProofModule: React.FC<PhotoProofModuleProps> = ({
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
+    if (!canUpload) {
+      setFeedbackMessage({ type: 'warning', text: 'Foto hasil hanya dapat ditambahkan setelah seluruh checklist Divisi Jahit selesai.' });
+      return;
+    }
     if (!fileList || fileList.length === 0) return;
 
     const files = Array.from(fileList);
@@ -127,14 +133,16 @@ export const PhotoProofModule: React.FC<PhotoProofModuleProps> = ({
 
         <label
           className={`no-print px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs ${
-            isMaxReached || isProcessing
+            isMaxReached || isProcessing || !canUpload
               ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
           }`}
           title={
             isMaxReached
               ? `Maksimal ${MAX_PHOTOS_PER_ORDER} foto tercapai`
-              : 'Ambil dari kamera atau upload file gambar'
+              : !canUpload
+                ? 'Selesaikan seluruh checklist Divisi Jahit terlebih dahulu'
+                : 'Ambil dari kamera atau upload file gambar'
           }
         >
           {isProcessing ? (
@@ -145,7 +153,7 @@ export const PhotoProofModule: React.FC<PhotoProofModuleProps> = ({
           ) : (
             <>
               <Camera className="w-3.5 h-3.5" />
-              <span>+ Ambil / Upload Foto</span>
+              <span>{canUpload ? '+ Ambil / Upload Foto' : 'Menunggu Jahit Selesai'}</span>
             </>
           )}
           <input
