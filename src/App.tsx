@@ -594,10 +594,10 @@ export default function App() {
       </div>
 
       {/* Main Screen Content Card */}
-      <main className="no-print max-w-6xl mx-auto bg-white rounded-xl shadow-md p-4 md:p-8 mt-4 border border-slate-200">
+      <main className="no-print mobile-main max-w-6xl mx-auto bg-white rounded-xl shadow-md p-4 md:p-8 mt-4 border border-slate-200">
         
         {/* Header Utama dengan Logo ProStitch Jersey & Tombol Aksi Lengkap */}
-        <div className="border-b pb-4 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="mobile-hide-header border-b pb-4 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
             <ProStitchLogo
               id="logoPreview"
@@ -678,15 +678,32 @@ export default function App() {
         )}
 
         {/* Order aktif selalu terlihat sebagai konteks global */}
-        <OrderInfoCard
-          order={currentOrder}
-          orders={orders}
-          onChange={handleUpdateOrderField}
-          onSelectOrder={loadOrder}
-        />
+        <div className="mobile-editable-order-info">
+          <OrderInfoCard
+            order={currentOrder}
+            orders={orders}
+            onChange={handleUpdateOrderField}
+            onSelectOrder={loadOrder}
+          />
+        </div>
+
+        <div className="mobile-active-order mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Order Aktif</p>
+              <h2 className="mt-1 text-lg font-black text-slate-900 truncate">{currentOrder.teamName || 'TANPA NAMA TIM'}</h2>
+              <p className="text-xs font-mono text-slate-500 mt-0.5">{currentOrder.spkNumber}</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700">{currentOrder.status}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="rounded-lg bg-slate-50 p-2.5"><p className="text-[10px] text-slate-500">Jumlah</p><p className="font-black text-slate-900">{recap.totalJersey} pcs</p></div>
+            <div className="rounded-lg bg-red-50 p-2.5"><p className="text-[10px] text-red-500">Deadline</p><p className="font-black text-red-700">{currentOrder.deadlineDate || '-'}</p></div>
+          </div>
+        </div>
 
         {/* Menu Dashboard */}
-        <div className="mb-6 border-b border-slate-200">
+        <div className="mobile-hide-primary-tabs mb-6 border-b border-slate-200">
           <div className="flex gap-1 overflow-x-auto pb-1">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -743,22 +760,6 @@ export default function App() {
                   <div><span className="text-slate-500">Klien / WA</span><p className="font-bold mt-1">{currentOrder.clientName || '-'} / {currentOrder.clientWhatsapp || '-'}</p></div>
                   <div><span className="text-slate-500">Nilai Order</span><p className="font-bold mt-1">Rp{Number(currentOrder.orderValue || 0).toLocaleString('id-ID')}</p></div>
                   <div><span className="text-slate-500">Jumlah Celana</span><p className="font-bold mt-1">{recap.totalCelana} Pcs</p></div>
-                </div>
-              </div>
-              <div className="rounded-lg border border-slate-200 p-4">
-                <h3 className="font-bold text-slate-800 text-sm mb-3">Akses Cepat</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    ['order', '📋 Kelola Order'],
-                    ['produksi', '🏭 Kontrol Produksi'],
-                    ['keuangan', '💰 Keuangan'],
-                    ['dokumentasi', '📷 Dokumentasi'],
-                    ['wa', '💬 WhatsApp Klien'],
-                  ].map(([id, label]) => (
-                    <button key={id} type="button" onClick={() => setActiveMenu(id as typeof activeMenu)} className="border border-slate-200 rounded-lg p-3 text-left text-xs font-bold hover:bg-slate-50">
-                      {label}
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
@@ -922,7 +923,27 @@ export default function App() {
 
       </main>
 
-      {/* Modal Tambah Order Baru (SPK & Excel Parser) */}
+
+      <nav className="mobile-bottom-nav fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)] pt-1.5 shadow-[0_-4px_18px_rgba(15,23,42,0.08)]" aria-label="Navigasi utama">
+        {[
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { id: 'order', label: 'Order', icon: ClipboardList },
+          { id: 'produksi', label: 'Produksi', icon: Factory },
+          { id: 'keuangan', label: 'Keuangan', icon: Wallet },
+        ].map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveMenu(id as typeof activeMenu)}
+            className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-[10px] font-bold transition-colors ${activeMenu === id ? 'text-indigo-700 bg-indigo-50' : 'text-slate-500'}`}
+          >
+            <Icon className="w-5 h-5" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Modal Tambah Order Baru (SPK & Excel Parser) */
       <CreateOrderModal
         isOpen={isCreateOrderModalOpen}
         onClose={() => setIsCreateOrderModalOpen(false)}

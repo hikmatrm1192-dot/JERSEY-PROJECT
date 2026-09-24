@@ -10,6 +10,60 @@
   }
 }
 
+@media screen and (max-width: 767px) {
+  body {
+    background: #f8fafc;
+    overflow-x: hidden;
+  }
+
+  .mobile-main {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    margin-top: 0 !important;
+    padding: 12px 12px 92px !important;
+    max-width: none !important;
+  }
+
+  .mobile-hide-header {
+    display: none !important;
+  }
+
+  .mobile-hide-primary-tabs {
+    display: none !important;
+  }
+
+  .mobile-hide-quick-actions {
+    display: none !important;
+  }
+
+  .mobile-editable-order-info {
+    display: none !important;
+  }
+
+  .mobile-active-order {
+    display: block !important;
+  }
+
+  .mobile-bottom-nav {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobile-more-menu {
+    display: block !important;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .mobile-active-order,
+  .mobile-bottom-nav,
+  .mobile-more-menu {
+    display: none !important;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
