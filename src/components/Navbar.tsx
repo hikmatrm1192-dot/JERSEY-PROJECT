@@ -4,6 +4,7 @@ import {
   FileSpreadsheet, 
   FolderOpen,
   PlusCircle,
+  Save,
   Check,
   ClipboardPaste,
   MessageSquare,
@@ -19,6 +20,7 @@ interface NavbarProps {
   savedOrders: OrderDetails[];
   onSelectOrder: (orderId: string) => void;
   onNewOrder: () => void;
+  onSaveOrder: () => void;
   onPrint: () => void;
   onOpenImport: () => void;
   onOpenOrderList?: () => void;
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   savedOrders,
   onSelectOrder,
   onNewOrder,
+  onSaveOrder,
   onPrint,
   onOpenImport,
   onOpenOrderList,
@@ -156,6 +159,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400">
             Lainnya
           </div>
+
+          <button
+            type="button"
+            onClick={() => runMoreAction(onNewOrder)}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm font-bold text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span>Tambah Order Baru</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => runMoreAction(onSaveOrder)}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 mt-1"
+          >
+            <Save className="w-5 h-5" />
+            <span>Simpan Order</span>
+          </button>
 
           {onOpenOrderList && (
             <button
