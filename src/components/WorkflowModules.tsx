@@ -1,12 +1,14 @@
 import React from 'react';
-import { WorkflowProgress } from '../types/jersey';
+import { WorkflowProgress, OrderDetails, WorkerItem } from '../types/jersey';
 
 interface WorkflowModulesProps {
   workflow?: WorkflowProgress;
   onChange: (workflow: WorkflowProgress) => void;
+  order: OrderDetails;
+  workers: WorkerItem[];
 }
 
-export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onChange }) => {
+export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onChange, order, workers }) => {
   const currentWorkflow: WorkflowProgress = workflow || {
     cutting: {
       patternCut: false,
@@ -39,6 +41,14 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
       },
     });
   };
+
+  const potongAssignments = (order.workerAssignments || []).filter((a) => a.division === 'potong');
+  const jahitAssignments = (order.workerAssignments || []).filter((a) => a.division === 'jahit');
+  const getWorkerName = (id: number | string, fallback?: string) =>
+    fallback || workers.find((w) => w.id === id)?.name || `Worker #${id}`;
+  const potongPcs = potongAssignments.reduce((sum, a) => sum + Math.max(0, Number(a.quantity) || 0), 0);
+  const jahitPcs = jahitAssignments.reduce((sum, a) => sum + Math.max(0, Number(a.quantity) || 0), 0);
+  const totalPcs = order.players?.length || 0;
 
   // Status computation for Cutting
   const cuttingCompleted = [
@@ -75,7 +85,36 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="mb-6">
+      <div className="bg-white border border-slate-200 rounded-lg p-3 mb-3 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span className="font-black text-slate-900">{order.teamName || 'TANPA NAMA TIM'}</span>
+            <span className="ml-2 font-mono text-slate-500">{order.spkNumber}</span>
+          </div>
+          <span className="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded font-bold">Status Order: {order.status}</span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded">
+            Potong: {potongPcs}/{totalPcs} pcs
+          </span>
+          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded">
+            Jahit: {jahitPcs}/{totalPcs} pcs
+          </span>
+        </div>
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+          <div className="bg-blue-50/50 rounded p-2">
+            <b className="text-blue-900">Pekerja Potong:</b>{' '}
+            {potongAssignments.length ? potongAssignments.map((a) => `${getWorkerName(a.workerId, a.workerName)} (${a.quantity} pcs)`).join(', ') : 'Belum ditugaskan'}
+          </div>
+          <div className="bg-emerald-50/50 rounded p-2">
+            <b className="text-emerald-900">Pekerja Jahit:</b>{' '}
+            {jahitAssignments.length ? jahitAssignments.map((a) => `${getWorkerName(a.workerId, a.workerName)} (${a.quantity} pcs)`).join(', ') : 'Belum ditugaskan'}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       
       {/* Divisi Potong (Cutting) */}
       <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg text-xs shadow-2xs">
@@ -183,6 +222,7 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
         </div>
       </div>
 
+      </div>
     </div>
   );
 };
