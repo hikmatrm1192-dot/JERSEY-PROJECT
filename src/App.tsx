@@ -578,6 +578,7 @@ export default function App() {
         savedOrders={orders}
         onSelectOrder={loadOrder}
         onNewOrder={createNewOrder}
+        onSaveOrder={saveCurrentOrder}
         onPrint={handlePrint}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenOrderList={() => setIsOrderListModalOpen(true)}
