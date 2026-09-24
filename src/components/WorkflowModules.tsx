@@ -73,6 +73,9 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
     currentWorkflow.sewing.collarElasticSewed,
     currentWorkflow.sewing.overdeckFinished,
   ].filter(Boolean).length;
+  const cuttingUnlocked = order.status !== 'Draft';
+  const sewingUnlocked = cuttingCompleted === 3;
+
 
   let sewingStatusBadge = {
     label: 'MENUNGGU',
@@ -130,10 +133,16 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           </span>
         </div>
 
+        {!cuttingUnlocked && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded p-2 mb-2 text-[11px] font-semibold">
+            Order belum diterima. Ubah status order menjadi <b>Bahan Diterima</b> sebelum pekerjaan potong dimulai.
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-blue-100 hover:border-blue-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!cuttingUnlocked}
               checked={currentWorkflow.cutting.patternCut}
               onChange={() => handleToggleCutting('patternCut')}
               className="accent-blue-600 rounded cursor-pointer"
@@ -146,6 +155,7 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-blue-100 hover:border-blue-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!cuttingUnlocked}
               checked={currentWorkflow.cutting.pantsCollarCut}
               onChange={() => handleToggleCutting('pantsCollarCut')}
               className="accent-blue-600 rounded cursor-pointer"
@@ -158,6 +168,7 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-blue-100 hover:border-blue-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!cuttingUnlocked}
               checked={currentWorkflow.cutting.specialItemsSeparated}
               onChange={() => handleToggleCutting('specialItemsSeparated')}
               className="accent-blue-600 rounded cursor-pointer"
@@ -183,10 +194,16 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           </span>
         </div>
 
+        {!sewingUnlocked && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded p-2 mb-2 text-[11px] font-semibold">
+            Divisi jahit terkunci sampai seluruh checklist divisi potong selesai.
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-emerald-100 hover:border-emerald-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!sewingUnlocked}
               checked={currentWorkflow.sewing.bodySleeveJoined}
               onChange={() => handleToggleSewing('bodySleeveJoined')}
               className="accent-emerald-600 rounded cursor-pointer"
@@ -199,6 +216,7 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-emerald-100 hover:border-emerald-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!sewingUnlocked}
               checked={currentWorkflow.sewing.collarElasticSewed}
               onChange={() => handleToggleSewing('collarElasticSewed')}
               className="accent-emerald-600 rounded cursor-pointer"
@@ -211,6 +229,7 @@ export const WorkflowModules: React.FC<WorkflowModulesProps> = ({ workflow, onCh
           <label className="flex items-center gap-2 bg-white p-2 rounded border border-emerald-100 hover:border-emerald-300 cursor-pointer transition-colors">
             <input
               type="checkbox"
+              disabled={!sewingUnlocked}
               checked={currentWorkflow.sewing.overdeckFinished}
               onChange={() => handleToggleSewing('overdeckFinished')}
               className="accent-emerald-600 rounded cursor-pointer"
