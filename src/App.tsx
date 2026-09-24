@@ -943,7 +943,7 @@ export default function App() {
         ))}
       </nav>
 
-      {/* Modal Tambah Order Baru (SPK & Excel Parser) */
+      {/* Modal Tambah Order Baru (SPK & Excel Parser) */}
       <CreateOrderModal
         isOpen={isCreateOrderModalOpen}
         onClose={() => setIsCreateOrderModalOpen(false)}
