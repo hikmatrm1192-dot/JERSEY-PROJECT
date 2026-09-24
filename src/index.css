@@ -48,6 +48,7 @@
 
   .mobile-bottom-nav {
     display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .mobile-more-menu {
