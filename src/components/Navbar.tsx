@@ -24,6 +24,8 @@ interface NavbarProps {
   onPrint: () => void;
   onOpenImport: () => void;
   onOpenOrderList?: () => void;
+  onOpenWorkers?: () => void;
+  onOpenCompleted?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,6 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onPrint,
   onOpenImport,
   onOpenOrderList,
+  onOpenWorkers,
+  onOpenCompleted,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -91,6 +95,28 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="hidden md:flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+          {onOpenWorkers && (
+            <button
+              type="button"
+              onClick={() => runMoreAction(onOpenWorkers)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm font-bold text-slate-700 hover:bg-slate-50"
+            >
+              <Settings className="w-5 h-5 text-indigo-600" />
+              <span>Pekerja</span>
+            </button>
+          )}
+
+          {onOpenCompleted && (
+            <button
+              type="button"
+              onClick={() => runMoreAction(onOpenCompleted)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm font-bold text-slate-700 hover:bg-slate-50"
+            >
+              <Check className="w-5 h-5 text-emerald-600" />
+              <span>Order Selesai</span>
+            </button>
+          )}
+
           {onOpenOrderList && (
             <button
               onClick={onOpenOrderList}
