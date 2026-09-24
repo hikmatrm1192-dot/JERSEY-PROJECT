@@ -813,12 +813,31 @@ export default function App() {
 
         {/* Pekerja */}
         {activeMenu === 'pekerja' && (
-          <section>
-            <WorkerAssignmentModule
-              order={currentOrder}
-              workers={workers}
-              onOpenAssignModal={() => openAssignmentModal(currentOrder)}
-            />
+          <section className="space-y-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h3 className="font-black text-slate-800 text-sm">Master & Penugasan Pekerja</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Kelola pekerja workshop dan tentukan pekerja Potong/Jahit untuk SPK {currentOrder.spkNumber}.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setIsWorkerModalOpen(true)} className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-bold">
+                    ⚙️ Kelola Master Pekerja
+                  </button>
+                  <button type="button" onClick={() => openAssignmentModal(currentOrder)} className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold">
+                    👷 Tugaskan ke SPK
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-3"><span className="text-[11px] text-slate-500">Total Pekerja</span><p className="font-black text-lg">{workers.length}</p></div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3"><span className="text-[11px] text-slate-500">Aktif</span><p className="font-black text-lg text-emerald-600">{workers.filter(w => w.active !== false).length}</p></div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3"><span className="text-[11px] text-slate-500">Potong</span><p className="font-black text-lg">{workers.filter(w => (w.role === 'potong' || w.role === 'potong_jahit') && w.active !== false).length}</p></div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3"><span className="text-[11px] text-slate-500">Jahit</span><p className="font-black text-lg">{workers.filter(w => (w.role === 'jahit' || w.role === 'potong_jahit') && w.active !== false).length}</p></div>
+              </div>
+            </div>
           </section>
         )}
 
