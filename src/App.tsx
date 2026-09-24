@@ -582,6 +582,8 @@ export default function App() {
         onPrint={handlePrint}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenOrderList={() => setIsOrderListModalOpen(true)}
+        onOpenWorkers={() => setIsWorkerModalOpen(true)}
+        onOpenCompleted={() => setActiveMenu('selesai')}
       />
 
       {/* Print-Only Document with Branding & Digital Stamp */}
