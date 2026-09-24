@@ -25,6 +25,13 @@ export interface WorkflowProgress {
     collarElasticSewed: boolean;
     overdeckFinished: boolean;
   };
+  productionChecklist?: {
+    settingLayout: boolean;
+    cutting: boolean;
+    sewing: boolean;
+    elastic: boolean;
+    qc: boolean;
+  };
 }
 
 export type WorkerRole = 'potong' | 'jahit' | 'potong_jahit';
