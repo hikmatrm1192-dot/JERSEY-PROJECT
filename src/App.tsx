@@ -23,7 +23,7 @@ import { OrderFinancialModule } from './components/OrderFinancialModule';
 import { OrderDetails, PlayerItem, WorkflowProgress, WorkerItem, WorkerRole, WorkerAssignment, OperationalCost } from './types/jersey';
 import { DEFAULT_INITIAL_ORDER, DEFAULT_WORKERS } from './data/defaultOrder';
 import { calculateProductionRecap } from './utils/orderCalculations';
-import { Check, Save, PlusCircle } from 'lucide-react';
+import { Check, Save, PlusCircle, LayoutDashboard, ClipboardList, Factory, Wallet, Camera, Users, Printer } from 'lucide-react';
 
 const STORAGE_KEY_ORDERS_DB = 'prostitch_orders_db';
 const STORAGE_KEY_CURRENT_ORDER = 'jersey_spk_current_order_v5';
@@ -180,7 +180,7 @@ export default function App() {
   const [isAssignWorkerModalOpen, setIsAssignWorkerModalOpen] = useState(false);
   const [assignmentOrder, setAssignmentOrder] = useState<OrderDetails | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [storageError, setStorageError] = useState<string | null>(null);
+  const [storageError, setStorageError] = useState<string | null>(null);\n  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'order' | 'produksi' | 'keuangan' | 'dokumentasi' | 'pekerja' | 'cetak'>('dashboard');
 
   // Sync orders db to localStorage
   useEffect(() => {
@@ -658,7 +658,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Detail SPK & Order Info (Format 5 Kolom: Team, SPK No, WA, Deadline, Status) */}
+        {/* Order aktif selalu terlihat sebagai konteks global */}
         <OrderInfoCard
           order={currentOrder}
           orders={orders}
@@ -666,61 +666,177 @@ export default function App() {
           onSelectOrder={loadOrder}
         />
 
-        {/* Modul Rincian Keuangan: Pemasukan, Biaya Upah, Biaya Operasional, & Laba Bersih */}
-        <OrderFinancialModule
-          order={currentOrder}
-          onOpenAssignModal={() => openAssignmentModal(currentOrder)}
-          onAddOperationalCost={handleAddOperationalCost}
-          onUpdateOperationalCost={handleUpdateOperationalCost}
-          onDeleteOperationalCost={handleDeleteOperationalCost}
-          onUpdateOrderValue={handleUpdateOrderValue}
-        />
+        {/* Menu Dashboard */}
+        <div className="mb-6 border-b border-slate-200">
+          <div className="flex gap-1 overflow-x-auto pb-1">
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+              { id: 'order', label: 'Order & SPK', icon: ClipboardList },
+              { id: 'produksi', label: 'Produksi', icon: Factory },
+              { id: 'keuangan', label: 'Keuangan', icon: Wallet },
+              { id: 'dokumentasi', label: 'Dokumentasi', icon: Camera },
+              { id: 'pekerja', label: 'Pekerja', icon: Users },
+              { id: 'cetak', label: 'Cetak', icon: Printer },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveMenu(id as typeof activeMenu)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-xs font-bold transition-colors ${
+                  activeMenu === id
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Modul Alur Workshop */}
-        <WorkflowModules
-          order={currentOrder}
-          workers={workers}
-          workflow={currentOrder.workflow}
-          onChange={handleUpdateWorkflow}
-        />
+        {/* Dashboard Ringkas */}
+        {activeMenu === 'dashboard' && (
+          <section className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] text-slate-500 font-semibold">ORDER AKTIF</p>
+                <p className="text-lg font-black text-slate-900 mt-1">{currentOrder.spkNumber}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] text-slate-500 font-semibold">TOTAL JERSEY</p>
+                <p className="text-2xl font-black text-indigo-600 mt-1">{recap.totalJersey} <span className="text-xs text-slate-500">PCS</span></p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] text-slate-500 font-semibold">STATUS PRODUKSI</p>
+                <p className="text-lg font-black text-slate-900 mt-1">{currentOrder.status}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] text-slate-500 font-semibold">DEADLINE</p>
+                <p className="text-lg font-black text-slate-900 mt-1">{currentOrder.deadlineDate || '-'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-slate-200 p-4">
+                <h3 className="font-bold text-slate-800 text-sm mb-3">Ringkasan Order</h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div><span className="text-slate-500">Tim</span><p className="font-bold mt-1">{currentOrder.teamName || '-'}</p></div>
+                  <div><span className="text-slate-500">Klien / WA</span><p className="font-bold mt-1">{currentOrder.clientName || '-'} / {currentOrder.clientWhatsapp || '-'}</p></div>
+                  <div><span className="text-slate-500">Nilai Order</span><p className="font-bold mt-1">Rp{Number(currentOrder.orderValue || 0).toLocaleString('id-ID')}</p></div>
+                  <div><span className="text-slate-500">Jumlah Celana</span><p className="font-bold mt-1">{recap.totalCelana} Pcs</p></div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-4">
+                <h3 className="font-bold text-slate-800 text-sm mb-3">Akses Cepat</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    ['order', '📋 Kelola Order'],
+                    ['produksi', '🏭 Kontrol Produksi'],
+                    ['keuangan', '💰 Keuangan'],
+                    ['dokumentasi', '📷 Dokumentasi'],
+                  ].map(([id, label]) => (
+                    <button key={id} type="button" onClick={() => setActiveMenu(id as typeof activeMenu)} className="border border-slate-200 rounded-lg p-3 text-left text-xs font-bold hover:bg-slate-50">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
-        {/* Tabel Nameset */}
-        <PlayerTable
-          players={currentOrder.players}
-          onUpdatePlayer={handleUpdatePlayer}
-          onAddPlayer={handleAddPlayer}
-          onRemovePlayer={handleRemovePlayer}
-          onDuplicatePlayer={handleDuplicatePlayer}
-          onMovePlayer={handleMovePlayer}
-          onResetSample={handleResetSample}
-          onClearAll={handleClearAll}
-          onOpenImport={() => setIsImportOpen(true)}
-          duplicateNumbers={recap.duplicateNumbers}
-        />
+        {/* Order & SPK */}
+        {activeMenu === 'order' && (
+          <section className="space-y-4">
+            <PlayerTable
+              players={currentOrder.players}
+              onUpdatePlayer={handleUpdatePlayer}
+              onAddPlayer={handleAddPlayer}
+              onRemovePlayer={handleRemovePlayer}
+              onDuplicatePlayer={handleDuplicatePlayer}
+              onMovePlayer={handleMovePlayer}
+              onResetSample={handleResetSample}
+              onClearAll={handleClearAll}
+              onOpenImport={() => setIsImportOpen(true)}
+              duplicateNumbers={recap.duplicateNumbers}
+            />
+            <AwarenessBanner recap={recap} />
+          </section>
+        )}
 
-        {/* Rekapitulasi Otomatis (Material Produksi) */}
-        <ProductionSummary
-          recap={recap}
-          workflow={currentOrder.workflow}
-          onChange={handleUpdateWorkflow}
-        />
+        {/* Produksi */}
+        {activeMenu === 'produksi' && (
+          <section className="space-y-4">
+            <WorkflowModules
+              order={currentOrder}
+              workers={workers}
+              workflow={currentOrder.workflow}
+              onChange={handleUpdateWorkflow}
+            />
+            <ProductionSummary
+              recap={recap}
+              workflow={currentOrder.workflow}
+              onChange={handleUpdateWorkflow}
+            />
+          </section>
+        )}
 
-        {/* Dokumentasi Foto Jersey Beres Dijahit */}
-        <PhotoProofModule
-          photos={currentOrder.photos}
-          onChange={handleUpdatePhotos}
-          storageError={storageError}
-          canUpload={
-            currentOrder.workflow?.sewing?.bodySleeveJoined === true &&
-            currentOrder.workflow?.sewing?.collarElasticSewed === true &&
-            currentOrder.workflow?.sewing?.overdeckFinished === true
-          }
-        />
+        {/* Keuangan */}
+        {activeMenu === 'keuangan' && (
+          <section>
+            <OrderFinancialModule
+              order={currentOrder}
+              onOpenAssignModal={() => openAssignmentModal(currentOrder)}
+              onAddOperationalCost={handleAddOperationalCost}
+              onUpdateOperationalCost={handleUpdateOperationalCost}
+              onDeleteOperationalCost={handleDeleteOperationalCost}
+              onUpdateOrderValue={handleUpdateOrderValue}
+            />
+          </section>
+        )}
 
-        {/* Awareness Alert */}
-        <AwarenessBanner
-          recap={recap}
-        />
+        {/* Dokumentasi */}
+        {activeMenu === 'dokumentasi' && (
+          <section>
+            <PhotoProofModule
+              photos={currentOrder.photos}
+              onChange={handleUpdatePhotos}
+              storageError={storageError}
+              canUpload={
+                currentOrder.workflow?.sewing?.bodySleeveJoined === true &&
+                currentOrder.workflow?.sewing?.collarElasticSewed === true &&
+                currentOrder.workflow?.sewing?.overdeckFinished === true
+              }
+            />
+          </section>
+        )}
+
+        {/* Pekerja */}
+        {activeMenu === 'pekerja' && (
+          <section>
+            <WorkerAssignmentModule
+              order={currentOrder}
+              workers={workers}
+              onOpenAssignModal={() => openAssignmentModal(currentOrder)}
+            />
+          </section>
+        )}
+
+        {/* Cetak */}
+        {activeMenu === 'cetak' && (
+          <section className="rounded-lg border border-slate-200 p-6 text-center">
+            <Printer className="w-8 h-8 mx-auto text-slate-500 mb-2" />
+            <h3 className="font-bold text-slate-800">Cetak SPK A4</h3>
+            <p className="text-xs text-slate-500 mt-1 mb-4">Cetak dokumen SPK untuk order aktif.</p>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold"
+            >
+              🖨️ Cetak A4
+            </button>
+          </section>
+        )}
 
       </main>
 
