@@ -11,7 +11,11 @@ interface OrderInfoCardProps {
 
 export const OrderInfoCard: React.FC<OrderInfoCardProps> = ({ order, orders, onChange, onSelectOrder }) => {
   const activeStatuses = new Set(['Bahan Diterima', 'Proses Potong', 'Proses Jahit', 'QC Passed']);
-  const activeOrders = orders.filter((o) => activeStatuses.has(o.status));
+  // Gunakan current order sebagai sumber tampilan terbaru agar dropdown selalu sinkron
+  // dengan form, meskipun daftar `orders` belum sempat menerima update state.
+  const activeOrders = orders
+    .map((o) => (o.id === order.id ? order : o))
+    .filter((o) => activeStatuses.has(o.status) || o.id === order.id);
 
   return (
     <>
