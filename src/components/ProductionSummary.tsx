@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ExtendedProductionRecap } from '../utils/orderCalculations';
 import { STANDARD_SIZES } from '../data/defaultOrder';
+import { WorkflowProgress } from '../types/jersey';
 
 interface ProductionSummaryProps {
   recap: ExtendedProductionRecap;
@@ -74,14 +75,14 @@ export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap }) =
         <h4 className="font-bold text-slate-700 uppercase mb-2">
           Checklist & Kontrol Alur Produksi:
         </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
-            checklist.setting ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
+            checklist.settingLayout ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
           }`}>
             <input
               type="checkbox"
-              checked={checklist.setting}
-              onChange={() => toggleCheck('setting')}
+              checked={checklist.settingLayout}
+              onChange={() => toggleCheck('settingLayout')}
               className="accent-indigo-600 cursor-pointer"
             />
             <span>Setting Layout</span>
