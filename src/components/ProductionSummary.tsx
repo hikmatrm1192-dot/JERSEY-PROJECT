@@ -9,7 +9,6 @@ interface ProductionSummaryProps {
 export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap }) => {
   const [checklist, setChecklist] = useState({
     setting: false,
-    print: false,
     cutting: false,
     sewing: false,
     elastic: false,
@@ -88,17 +87,6 @@ export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap }) =
             <span>Setting Layout</span>
           </label>
 
-          <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
-            checklist.print ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
-          }`}>
-            <input
-              type="checkbox"
-              checked={checklist.print}
-              onChange={() => toggleCheck('print')}
-              className="accent-indigo-600 cursor-pointer"
-            />
-            <span>Print Sublim</span>
-          </label>
 
           <label className={`border p-2 rounded flex items-center gap-1.5 cursor-pointer transition-colors ${
             checklist.cutting ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200'
