@@ -641,6 +641,8 @@ export default function App() {
 
         {/* Modul Alur Workshop */}
         <WorkflowModules
+          order={currentOrder}
+          workers={workers}
           workflow={currentOrder.workflow}
           onChange={handleUpdateWorkflow}
         />
@@ -662,6 +664,8 @@ export default function App() {
         {/* Rekapitulasi Otomatis (Material Produksi) */}
         <ProductionSummary
           recap={recap}
+          workflow={currentOrder.workflow}
+          onChange={handleUpdateWorkflow}
         />
 
         {/* Dokumentasi Foto Jersey Beres Dijahit */}
