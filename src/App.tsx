@@ -181,7 +181,7 @@ export default function App() {
   const [assignmentOrder, setAssignmentOrder] = useState<OrderDetails | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
-  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'order' | 'produksi' | 'keuangan' | 'dokumentasi' | 'pekerja' | 'wa' | 'cetak'>('dashboard');
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'order' | 'produksi' | 'keuangan' | 'selesai' | 'pekerja' | 'cetak'>('dashboard');
 
   // Sync orders db to localStorage
   useEffect(() => {
@@ -693,9 +693,8 @@ export default function App() {
               { id: 'order', label: 'Order & SPK', icon: ClipboardList },
               { id: 'produksi', label: 'Produksi', icon: Factory },
               { id: 'keuangan', label: 'Keuangan', icon: Wallet },
-              { id: 'dokumentasi', label: 'Dokumentasi', icon: Camera },
+              { id: 'selesai', label: 'Order Selesai', icon: MessageCircle },
               { id: 'pekerja', label: 'Pekerja', icon: Users },
-              { id: 'wa', label: 'WhatsApp', icon: MessageCircle },
               { id: 'cetak', label: 'Cetak', icon: Printer },
             ].map(({ id, label, icon: Icon }) => (
               <button
@@ -862,59 +861,45 @@ export default function App() {
           </section>
         )}
 
-        {/* WhatsApp */}
-        {activeMenu === 'wa' && (
+        {/* Order Selesai */}
+        {activeMenu === 'selesai' && (
           <section className="space-y-4">
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-emerald-600 text-white p-2.5">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-slate-800 text-sm">WhatsApp Klien</h3>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Pilih order untuk langsung membuka chat WhatsApp klien.
-                  </p>
-                </div>
-              </div>
+              <h3 className="font-black text-slate-800 text-sm">Order Selesai</h3>
+              <p className="text-xs text-slate-600 mt-1">Dokumentasi hasil produksi dan komunikasi konfirmasi dengan klien.</p>
             </div>
-
-            <div className="space-y-2">
-              {orders.length === 0 ? (
-                <div className="rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500">
-                  Belum ada order.
-                </div>
-              ) : (
-                orders.map((order) => {
+            <PhotoProofModule
+              photos={currentOrder.photos}
+              onChange={handleUpdatePhotos}
+              storageError={storageError}
+              canUpload={
+                currentOrder.workflow?.sewing?.bodySleeveJoined === true &&
+                currentOrder.workflow?.sewing?.collarElasticSewed === true &&
+                currentOrder.workflow?.sewing?.overdeckFinished === true
+              }
+            />
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <h3 className="font-bold text-slate-800 text-sm mb-3">💬 WhatsApp Klien</h3>
+              <div className="space-y-2">
+                {orders.length === 0 ? (
+                  <p className="text-xs text-slate-500">Belum ada order.</p>
+                ) : orders.map((order) => {
                   const phone = String((order as any).clientWhatsapp || order.clientContact || '').trim();
                   const hasPhone = phone.replace(/\D/g, '').length >= 8;
-
                   return (
-                    <div key={order.id} className="rounded-lg border border-slate-200 bg-white p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div key={order.id} className="rounded-lg border border-slate-200 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="font-black text-slate-800 text-sm truncate">{order.teamName || 'TANPA NAMA TIM'}</p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
-                          <span>{order.spkNumber}</span>
-                          <span>•</span>
-                          <span>{order.status}</span>
-                          <span>•</span>
-                          <span>{phone || 'Nomor WA belum diisi'}</span>
-                        </div>
+                        <p className="font-bold text-slate-800 text-xs truncate">{order.teamName || 'TANPA NAMA TIM'}</p>
+                        <p className="text-[11px] text-slate-500">{order.spkNumber} • {order.status} • {phone || 'Nomor WA belum diisi'}</p>
                       </div>
-
-                      <button
-                        type="button"
-                        disabled={!hasPhone}
-                        onClick={() => openWhatsApp(phone, order)}
-                        className="shrink-0 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-xs font-bold hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
-                      >
+                      <button type="button" disabled={!hasPhone} onClick={() => openWhatsApp(phone, order)} className="shrink-0 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold disabled:bg-slate-300 disabled:cursor-not-allowed">
                         <MessageCircle className="w-4 h-4" />
                         {hasPhone ? 'Buka WhatsApp' : 'Nomor belum ada'}
                       </button>
                     </div>
                   );
-                })
-              )}
+                })}
+              </div>
             </div>
           </section>
         )}
