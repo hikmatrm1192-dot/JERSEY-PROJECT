@@ -5,19 +5,25 @@ import { WorkflowProgress } from '../types/jersey';
 
 interface ProductionSummaryProps {
   recap: ExtendedProductionRecap;
+  workflow?: WorkflowProgress;
+  onChange: (workflow: WorkflowProgress) => void;
 }
 
-export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap }) => {
-  const [checklist, setChecklist] = useState({
-    setting: false,
-    cutting: false,
-    sewing: false,
-    elastic: false,
-    qc: false,
-  });
+export const ProductionSummary: React.FC<ProductionSummaryProps> = ({ recap, workflow, onChange }) => {
+  const currentWorkflow: WorkflowProgress = workflow || {
+    cutting: { patternCut: false, pantsCollarCut: false, specialItemsSeparated: false },
+    sewing: { bodySleeveJoined: false, collarElasticSewed: false, overdeckFinished: false },
+    productionChecklist: { settingLayout: false, cutting: false, sewing: false, elastic: false, qc: false },
+  };
+  const checklist = currentWorkflow.productionChecklist || {
+    settingLayout: false, cutting: false, sewing: false, elastic: false, qc: false,
+  };
 
   const toggleCheck = (key: keyof typeof checklist) => {
-    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+    onChange({
+      ...currentWorkflow,
+      productionChecklist: { ...checklist, [key]: !checklist[key] },
+    });
   };
 
   const sortedSizes = Object.keys(recap.sizeJerseyCounts).sort((a, b) => {
