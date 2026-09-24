@@ -708,6 +708,11 @@ export default function App() {
           photos={currentOrder.photos}
           onChange={handleUpdatePhotos}
           storageError={storageError}
+          canUpload={
+            currentOrder.workflow?.sewing?.bodySleeveJoined === true &&
+            currentOrder.workflow?.sewing?.collarElasticSewed === true &&
+            currentOrder.workflow?.sewing?.overdeckFinished === true
+          }
         />
 
         {/* Awareness Alert */}
