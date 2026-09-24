@@ -180,7 +180,8 @@ export default function App() {
   const [isAssignWorkerModalOpen, setIsAssignWorkerModalOpen] = useState(false);
   const [assignmentOrder, setAssignmentOrder] = useState<OrderDetails | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [storageError, setStorageError] = useState<string | null>(null);\n  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'order' | 'produksi' | 'keuangan' | 'dokumentasi' | 'pekerja' | 'cetak'>('dashboard');
+  const [storageError, setStorageError] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'order' | 'produksi' | 'keuangan' | 'dokumentasi' | 'pekerja' | 'cetak'>('dashboard');
 
   // Sync orders db to localStorage
   useEffect(() => {
